@@ -61,23 +61,7 @@
                                                 style="background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
                                             >
                                                 Editar
-                                            </a>
-
-                                            <form
-                                                method="POST"
-                                                action="{{ route('roles.destroy', ['role' => $rol->idRol]) }}"
-                                                onsubmit="return confirm('¿Deseas eliminar este rol?');"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button
-                                                    type="submit"
-                                                    style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
-                                                >
-                                                    Eliminar
-                                                </button>
-                                            </form>
+                                            </a>                        
                                         </div>
                                     </td>
                                 </tr>

@@ -101,7 +101,7 @@ class GrupoController extends Controller
             'grado' => ['required', 'integer', 'between:1,6'],
             'letraGrupo' => ['required', 'string', 'size:1', 'alpha'],
             'cicloEsc' => ['required', 'string', 'max:25'],
-            'estado' => ['required', 'boolean'],
+            'estado' => ['prohibited'],
             'idMaestro' => ['required', 'exists:usuarios,idUsuario'],
             'escuela_idEscuela' => ['required', 'exists:escuelas,idEscuela'],
         ]);

@@ -36,4 +36,13 @@ class Alumno extends Model
     {
         return $this->belongsTo(Grupo::class, 'grupo_idGrupo', 'idGrupo');
     }
+
+    public function solicitudesAccesoSalon()
+    {
+        return $this->hasMany(
+            SolicitudAccesoSalon::class,
+            'alumno_idAlumno',
+            'idAlumno'
+        );
+    }
 }

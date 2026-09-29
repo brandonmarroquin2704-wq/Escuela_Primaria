@@ -3,6 +3,10 @@
     @resize.window="menuAbierto = window.innerWidth >= 768"
     class="min-h-screen bg-slate-100"
 >
+    @php
+        $miUsuario = auth()->user()?->usuario;
+    @endphp
+
     <aside
         class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-gradient-to-b from-blue-800 via-blue-700 to-indigo-900 text-white shadow-2xl transition-transform duration-300"
         :class="menuAbierto ? 'translate-x-0' : '-translate-x-full'"
@@ -29,92 +33,122 @@
                 Dashboard
             </a>
 
-            <button
-                type="button"
-                @click="gestionAbierta = !gestionAbierta"
-                class="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-sm font-semibold transition hover:bg-white/15"
-            >
-                <span class="flex items-center gap-3">
-                    <span class="text-lg">▦</span>
-                    Gestión escolar
-                </span>
-
-                <span
-                    class="transition-transform duration-200"
-                    :class="{ 'rotate-180': gestionAbierta }"
+            @if (
+                $miUsuario?->tienePermiso('Escuelas', 'Consultar')
+                || $miUsuario?->tienePermiso('Periodos escolares', 'Consultar')
+                || $miUsuario?->tienePermiso('Roles', 'Consultar')
+                || $miUsuario?->tienePermiso('Usuarios', 'Consultar')
+                || $miUsuario?->tienePermiso('Asignaturas', 'Consultar')
+                || $miUsuario?->tienePermiso('Grupos', 'Consultar')
+                || $miUsuario?->tienePermiso('Alumnos', 'Consultar')
+                || $miUsuario?->tienePermiso('Tutores y alumnos', 'Consultar')
+                || $miUsuario?->tienePermiso('Asignación de materias', 'Consultar')
+            )
+                <button
+                    type="button"
+                    @click="gestionAbierta = !gestionAbierta"
+                    class="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-sm font-semibold transition hover:bg-white/15"
                 >
-                    ⌄
-                </span>
-            </button>
+                    <span class="flex items-center gap-3">
+                        <span class="text-lg">▦</span>
+                        Gestión escolar
+                    </span>
 
-            <div
-                x-show="gestionAbierta"
-                x-transition
-                class="mt-1 space-y-1 border-l border-blue-400/60 pl-3"
-            >
-                <a
-                    href="{{ route('escuelas.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('escuelas.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Escuelas
-                </a>
+                    <span
+                        class="transition-transform duration-200"
+                        :class="{ 'rotate-180': gestionAbierta }"
+                    >
+                        ⌄
+                    </span>
+                </button>
 
-                <a
-                    href="{{ route('periodos-escolares.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('periodos-escolares.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                <div
+                    x-show="gestionAbierta"
+                    x-transition
+                    class="mt-1 space-y-1 border-l border-blue-400/60 pl-3"
                 >
-                    Periodos escolares
-                </a>
+                    @if ($miUsuario?->tienePermiso('Escuelas', 'Consultar'))
+                        <a
+                            href="{{ route('escuelas.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('escuelas.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Escuelas
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('roles.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('roles.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Roles
-                </a>
+                    @if ($miUsuario?->tienePermiso('Periodos escolares', 'Consultar'))
+                        <a
+                            href="{{ route('periodos-escolares.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('periodos-escolares.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Periodos escolares
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('usuarios.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('usuarios.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Usuarios
-                </a>
+                    @if ($miUsuario?->tienePermiso('Roles', 'Consultar'))
+                        <a
+                            href="{{ route('roles.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('roles.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Roles
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('asignaturas.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('asignaturas.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Asignaturas
-                </a>
+                    @if ($miUsuario?->tienePermiso('Usuarios', 'Consultar'))
+                        <a
+                            href="{{ route('usuarios.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('usuarios.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Usuarios
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('grupos.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('grupos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Grupos
-                </a>
+                    @if ($miUsuario?->tienePermiso('Asignaturas', 'Consultar'))
+                        <a
+                            href="{{ route('asignaturas.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('asignaturas.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Asignaturas
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('alumnos.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('alumnos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Alumnos
-                </a>
+                    @if ($miUsuario?->tienePermiso('Grupos', 'Consultar'))
+                        <a
+                            href="{{ route('grupos.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('grupos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Grupos
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('tutor-alumnos.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('tutor-alumnos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Tutores y alumnos
-                </a>
+                    @if ($miUsuario?->tienePermiso('Alumnos', 'Consultar'))
+                        <a
+                            href="{{ route('alumnos.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('alumnos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Alumnos
+                        </a>
+                    @endif
 
-                <a
-                    href="{{ route('asignaciones-docentes.index') }}"
-                    class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('asignaciones-docentes.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                >
-                    Asignación de materias
-                </a>
-            </div>
+                    @if ($miUsuario?->tienePermiso('Tutores y alumnos', 'Consultar'))
+                        <a
+                            href="{{ route('tutor-alumnos.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('tutor-alumnos.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Tutores y alumnos
+                        </a>
+                    @endif
+
+                    @if ($miUsuario?->tienePermiso('Asignación de materias', 'Consultar'))
+                        <a
+                            href="{{ route('asignaciones-docentes.index') }}"
+                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('asignaciones-docentes.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                        >
+                            Asignación de materias
+                        </a>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="border-t border-blue-500 p-4">
@@ -187,6 +221,4 @@
 
         <main>
             {{ $slot }}
-        </main>
-    </div>
-</nav>
+      

@@ -142,37 +142,6 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <div>
-                            <label for="estado" class="block text-sm font-medium text-gray-700">
-                                Estado
-                            </label>
-
-                            <select
-                                id="estado"
-                                name="estado"
-                                required
-                                class="mt-1 block w-full rounded border-gray-300"
-                            >
-                                <option
-                                    value="1"
-                                    @selected(old('estado', $grupo->estado ? '1' : '0') == '1')
-                                >
-                                    Activo
-                                </option>
-
-                                <option
-                                    value="0"
-                                    @selected(old('estado', $grupo->estado ? '1' : '0') == '0')
-                                >
-                                    Inactivo
-                                </option>
-                            </select>
-
-                            @error('estado')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
                     </div>
 
                     <div class="mt-6 flex items-center gap-3">

@@ -82,22 +82,7 @@
                                             >
                                                 Editar
                                             </a>
-
-                                            <form
-                                                method="POST"
-                                                action="{{ route('grupos.destroy', ['grupo' => $grupo->idGrupo]) }}"
-                                                onsubmit="return confirm('¿Deseas eliminar este grupo?');"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button
-                                                    type="submit"
-                                                    style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
-                                                >
-                                                    Eliminar
-                                                </button>
-                                            </form>
+   
                                         </div>
                                     </td>
                                 </tr>

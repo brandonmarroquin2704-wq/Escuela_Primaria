@@ -13,8 +13,23 @@ class Rol extends Model
 
     protected $primaryKey = 'idRol';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'nombre',
         'descripcion',
     ];
+
+    protected $casts = [
+    'created_at' => 'datetime',
+];
+
+    public function rolPermisos()
+    {
+        return $this->hasMany(
+            RolPermiso::class,
+            'rol_idRol',
+            'idRol'
+        );
+    }
 }

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Rol;
 use App\Models\Usuario;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -32,20 +34,46 @@ class UsuarioController extends Controller
             'nombre' => ['required', 'string', 'max:45'],
             'apellidoPaterno' => ['required', 'string', 'max:45'],
             'apellidoMaterno' => ['required', 'string', 'max:45'],
-            'correo' => ['required', 'string', 'email', 'max:150', 'unique:usuarios,correo'],
+            'correo' => [
+                'required',
+                'string',
+                'email',
+                'max:150',
+                'unique:usuarios,correo',
+                'unique:users,email',
+            ],
             'contrasena' => ['required', 'string', 'min:8', 'confirmed'],
             'rol_idRol' => ['required', 'exists:roles,idRol'],
             'estado' => ['required', 'boolean'],
         ]);
 
-        $datos['contrasena'] = Hash::make($datos['contrasena']);
-        $datos['fRegistro'] = now()->toDateString();
+        $usuario = DB::transaction(function () use ($datos) {
+            $contrasenaCifrada = Hash::make($datos['contrasena']);
 
-        Usuario::create($datos);
+            $usuario = Usuario::create([
+                'nombre' => $datos['nombre'],
+                'apellidoPaterno' => $datos['apellidoPaterno'],
+                'apellidoMaterno' => $datos['apellidoMaterno'],
+                'correo' => $datos['correo'],
+                'contrasena' => $contrasenaCifrada,
+                'rol_idRol' => $datos['rol_idRol'],
+                'estado' => $datos['estado'],
+                'fRegistro' => now()->toDateString(),
+            ]);
+
+            User::create([
+                'name' => trim("{$datos['nombre']} {$datos['apellidoPaterno']} {$datos['apellidoMaterno']}"),
+                'email' => $datos['correo'],
+                'password' => $contrasenaCifrada,
+                'usuario_idUsuario' => $usuario->idUsuario,
+            ]);
+
+            return $usuario;
+        });
 
         return redirect()
             ->route('usuarios.index')
-            ->with('success', 'Usuario registrado correctamente.');
+            ->with('success', 'Usuario y cuenta de acceso registrados correctamente.');
     }
 
     public function show($idUsuario)
@@ -74,8 +102,8 @@ class UsuarioController extends Controller
                 'string',
                 'email',
                 'max:150',
-                Rule::unique('usuarios', 'correo')
-                    ->ignore($usuario->idUsuario, 'idUsuario'),
+                Rule::unique('usuarios', 'correo')->ignore($usuario->idUsuario, 'idUsuario'),
+                Rule::unique('users', 'email')->ignore($usuario->cuentaAcceso?->id),
             ],
             'rol_idRol' => ['required', 'exists:roles,idRol'],
             'estado' => ['required', 'boolean'],
@@ -87,13 +115,33 @@ class UsuarioController extends Controller
 
         $datos = $request->validate($reglas);
 
-        if ($request->filled('contrasena')) {
-            $datos['contrasena'] = Hash::make($datos['contrasena']);
-        } else {
-            unset($datos['contrasena']);
-        }
+        DB::transaction(function () use ($usuario, $datos, $request) {
+            $contrasenaCifrada = null;
 
-        $usuario->update($datos);
+            if ($request->filled('contrasena')) {
+                $contrasenaCifrada = Hash::make($datos['contrasena']);
+                $datos['contrasena'] = $contrasenaCifrada;
+            } else {
+                unset($datos['contrasena']);
+            }
+
+            $usuario->update($datos);
+
+            $cuenta = $usuario->cuentaAcceso;
+
+            if ($cuenta) {
+                $cambiosCuenta = [
+                    'name' => trim("{$datos['nombre']} {$datos['apellidoPaterno']} {$datos['apellidoMaterno']}"),
+                    'email' => $datos['correo'],
+                ];
+
+                if ($contrasenaCifrada) {
+                    $cambiosCuenta['password'] = $contrasenaCifrada;
+                }
+
+                $cuenta->update($cambiosCuenta);
+            }
+        });
 
         return redirect()
             ->route('usuarios.index')

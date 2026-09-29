@@ -82,26 +82,13 @@
                                     <td class="border px-3 py-2">
                                         <div class="flex gap-2">
                                             <a
-                                                href="{{ route('alumnos.edit', ['alumno' => $alumno->idAlumno]) }}"
-                                                style="background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
-                                            >
-                                                Editar
-                                            </a>
+    href="{{ route('alumnos.edit', ['alumno' => $alumno->idAlumno]) }}"
+    style="background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
+>
+    Editar
+</a>
+</div>
 
-                                            <form
-                                                method="POST"
-                                                action="{{ route('alumnos.destroy', ['alumno' => $alumno->idAlumno]) }}"
-                                                onsubmit="return confirm('¿Deseas eliminar este alumno?');"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button
-                                                    type="submit"
-                                                    style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
-                                                >
-                                                    Eliminar
-                                                </button>
                                             </form>
                                         </div>
                                     </td>
