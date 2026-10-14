@@ -8,9 +8,16 @@
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+
                 @if (session('success'))
-                    <div class="mb-4 rounded bg-green-100 p-3 text-green-700">
+                    <div class="mb-4 rounded bg-green-100 px-4 py-3 text-green-800">
                         {{ session('success') }}
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-4 rounded bg-red-100 px-4 py-3 text-red-800">
+                        {{ session('error') }}
                     </div>
                 @endif
 
@@ -39,13 +46,9 @@
                         <tbody>
                             @forelse ($asignaturas as $asignatura)
                                 <tr>
-                                    <td class="border px-3 py-2">
-                                        {{ $asignatura->idAsignatura }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $asignatura->idAsignatura }}</td>
 
-                                    <td class="border px-3 py-2">
-                                        {{ $asignatura->nombre }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $asignatura->nombre }}</td>
 
                                     <td class="border px-3 py-2">
                                         {{ $asignatura->descripcion ?? 'Sin descripción' }}
@@ -58,33 +61,33 @@
                                     <td class="border px-3 py-2">
                                         {{ $asignatura->fechaRegistro?->format('d/m/Y H:i') }}
                                     </td>
+
                                     <td class="border px-3 py-2">
- <td class="border px-3 py-2">
-    <div class="flex gap-2">
-        <a
-            href="{{ route('asignaturas.edit', $asignatura) }}"
-            style="background-color: #c5c5c6; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
-        >
-            Editar
-        </a>
+                                        <div class="flex gap-2">
+                                            <a
+                                                href="{{ route('asignaturas.edit', $asignatura) }}"
+                                                style="background-color: #c5c5c6; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
+                                            >
+                                                Editar
+                                            </a>
 
-        <form
-            method="POST"
-            action="{{ route('asignaturas.destroy', $asignatura) }}"
-            onsubmit="return confirm('¿Deseas eliminar esta asignatura?');"
-        >
-            @csrf
-            @method('DELETE')
+                                            <form
+                                                method="POST"
+                                                action="{{ route('asignaturas.destroy', $asignatura) }}"
+                                                onsubmit="return confirm('¿Deseas eliminar esta asignatura?');"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
 
-            <button
-                type="submit"
-                style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
-            >
-                Eliminar
-            </button>
-        </form>
-    </div>
-</td>
+                                                <button
+                                                    type="submit"
+                                                    style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
