@@ -136,7 +136,13 @@
         <p class="descripcion">
             Selecciona el tipo de acceso que corresponde a tu perfil.
         </p>
+            @if (session('error'))
+            <div role="alert" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:12px 16px; border-radius:10px; margin:0 auto 24px; max-width:600px; font-weight:600;">
+                {{ session('error') }}
+            </div>
+        @endif
 
+        
         <section class="opciones">
             <article class="tarjeta">
                 <div class="icono">👨‍👩‍👧</div>
@@ -148,8 +154,8 @@
                     autorizada de tus hijos.
                 </p>
 
-                <a class="boton" href="{{ route('login') }}">
-                    Acceder como padre o tutor
+                <a class="boton" href="{{ route('login', ['tipo' => 'tutor']) }}">
+                Acceder como padre o tutor
                 </a>
             </article>
 
@@ -163,8 +169,8 @@
                     administración escolar.
                 </p>
 
-                <a class="boton" href="{{ route('login') }}">
-                    Acceder como personal
+                <a class="boton" href="{{ route('login', ['tipo' => 'personal']) }}">
+                Acceder como personal
                 </a>
             </article>
         </section>

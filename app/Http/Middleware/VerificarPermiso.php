@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\RolPermiso;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,29 +15,18 @@ class VerificarPermiso
         string $permiso
     ): Response {
         $cuenta = $request->user();
+        $perfil = $cuenta?->usuario;
 
-        if (! $cuenta || ! $cuenta->usuario || ! $cuenta->usuario->rol) {
+        if (! $perfil || ! $perfil->rol) {
             abort(403, 'Tu cuenta no está vinculada a un perfil escolar con rol activo.');
         }
 
-        $tienePermiso = RolPermiso::query()
-            ->where('rol_idRol', $cuenta->usuario->rol->idRol)
-            ->where('estado', true)
-            ->whereHas('modulo', function ($query) use ($modulo) {
-                $query->where('nombre', $modulo)
-                    ->where('estado', true);
-            })
-            ->whereHas('permiso', function ($query) use ($permiso) {
-                $query->where('nombre', $permiso)
-                    ->where('estado', true);
-            })
-            ->exists();
+        if (! $perfil->estado) {
+            abort(403, 'Tu cuenta está inactiva. Contacta al administrador.');
+        }
 
-        if (! $tienePermiso) {
-            abort(
-                403,
-                "No tienes permiso para {$permiso} en el módulo {$modulo}."
-            );
+        if (! $perfil->tienePermiso($modulo, $permiso)) {
+            abort(403, "No tienes permiso para {$permiso} en el módulo {$modulo}.");
         }
 
         return $next($request);

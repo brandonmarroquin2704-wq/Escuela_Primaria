@@ -25,19 +25,15 @@ class LoginRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+        public function rules(): array
     {
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'tipo' => ['required', 'in:personal,tutor'],
         ];
     }
 
-    /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws ValidationException
-     */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
@@ -50,7 +46,27 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $perfil = Auth::user()->usuario;
+        $esTutor = $perfil?->rol?->nombre === 'Tutor';
+        $tipoCorrecto = $this->input('tipo') === ($esTutor ? 'tutor' : 'personal');
+
+        if (! $perfil || ! $tipoCorrecto) {
+            $this->rechazar(trans('auth.failed'));
+        }
+
+        if (! $perfil->estado) {
+            $this->rechazar('Tu cuenta está inactiva. Contacta al administrador.');
+        }
+
         RateLimiter::clear($this->throttleKey());
+    }
+
+    private function rechazar(string $mensaje): never
+    {
+        Auth::guard('web')->logout();
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages(['email' => $mensaje]);
     }
 
     /**

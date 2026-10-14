@@ -27,6 +27,7 @@ class Usuario extends Model
     protected $hidden = [
         'contrasena',
     ];
+        protected $permisosCache = null;
 
     protected function casts(): array
     {
@@ -68,23 +69,27 @@ class Usuario extends Model
         );
     }
 
-    public function tienePermiso(string $modulo, string $permiso): bool
-{
-    if (! $this->rol) {
-        return false;
+     public function permisos(): \Illuminate\Support\Collection
+    {
+        if ($this->permisosCache === null) {
+            $this->permisosCache = \App\Models\RolPermiso::query()
+                ->where('rol_idRol', $this->rol_idRol)
+                ->where('estado', true)
+                ->whereHas('modulo', fn ($q) => $q->where('estado', true))
+                ->whereHas('permiso', fn ($q) => $q->where('estado', true))
+                ->with(['modulo:idModulo,nombre', 'permiso:idPermiso,nombre'])
+                ->get()
+                ->map(fn ($rp) => $rp->modulo->nombre . '.' . $rp->permiso->nombre);
+        }
+
+        return $this->permisosCache;
     }
 
-    return \App\Models\RolPermiso::query()
-        ->where('rol_idRol', $this->rol->idRol)
-        ->where('estado', true)
-        ->whereHas('modulo', function ($query) use ($modulo) {
-            $query->where('nombre', $modulo)->where('estado', true);
-        })
-        ->whereHas('permiso', function ($query) use ($permiso) {
-            $query->where('nombre', $permiso)->where('estado', true);
-        })
-        ->exists();
-}
+    public function tienePermiso(string $modulo, string $permiso): bool
+    {
+        return (bool) $this->estado
+            && $this->permisos()->contains($modulo . '.' . $permiso);
+    }
 
     public function solicitudesValidadas()
     {

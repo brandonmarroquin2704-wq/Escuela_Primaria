@@ -8,28 +8,30 @@ use Illuminate\Http\Request;
 class EscuelaController extends Controller
 {
     /**
-     * Muestra todas las escuelas registradas.
-     */
-    public function index()
-    {
-        $escuelas = Escuela::orderBy('nombre')->get();
-
-        return view('escuelas.index', compact('escuelas'));
-    }
-
-    /**
-     * Muestra el formulario para registrar una escuela.
+     * Muestra el formulario para registrar la escuela.
      */
     public function create()
     {
+        if (Escuela::exists()) {
+            return redirect()
+                ->route('dashboard')
+                ->with('error', 'La escuela ya está registrada. Puedes editar sus datos desde el inicio.');
+        }
+
         return view('escuelas.create');
     }
 
     /**
-     * Guarda una nueva escuela.
+     * Guarda la escuela (solo se permite una).
      */
     public function store(Request $request)
     {
+        if (Escuela::exists()) {
+            return redirect()
+                ->route('dashboard')
+                ->with('error', 'La escuela ya está registrada.');
+        }
+
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:100'],
             'claveCentroTrabajo' => [
@@ -37,6 +39,8 @@ class EscuelaController extends Controller
                 'string',
                 'max:25',
                 'unique:escuelas,claveCentroTrabajo',
+                // Opcional: formato real de la CCT (ej. 07DPR0001A)
+                // 'regex:/^[0-9]{2}[A-Z]{3}[0-9]{4}[A-Z]$/',
             ],
             'telefono' => ['required', 'string', 'max:25'],
             'correo' => [
@@ -57,16 +61,8 @@ class EscuelaController extends Controller
         Escuela::create($datos);
 
         return redirect()
-            ->route('escuelas.index')
+            ->route('dashboard')
             ->with('success', 'Escuela registrada correctamente.');
-    }
-
-    /**
-     * Muestra una escuela específica.
-     */
-    public function show(Escuela $escuela)
-    {
-        return view('escuelas.show', compact('escuela'));
     }
 
     /**
@@ -78,7 +74,7 @@ class EscuelaController extends Controller
     }
 
     /**
-     * Actualiza una escuela existente.
+     * Actualiza los datos de la escuela.
      */
     public function update(Request $request, Escuela $escuela)
     {
@@ -91,6 +87,7 @@ class EscuelaController extends Controller
                 'unique:escuelas,claveCentroTrabajo,' .
                     $escuela->idEscuela .
                     ',idEscuela',
+                // 'regex:/^[0-9]{2}[A-Z]{3}[0-9]{4}[A-Z]$/',
             ],
             'telefono' => ['required', 'string', 'max:25'],
             'correo' => [
@@ -112,19 +109,7 @@ class EscuelaController extends Controller
         $escuela->update($datos);
 
         return redirect()
-            ->route('escuelas.index')
-            ->with('success', 'Escuela actualizada correctamente.');
-    }
-
-    /**
-     * Elimina una escuela.
-     */
-    public function destroy(Escuela $escuela)
-    {
-        $escuela->delete();
-
-        return redirect()
-            ->route('escuelas.index')
-            ->with('success', 'Escuela eliminada correctamente.');
+            ->route('dashboard')
+            ->with('success', 'Datos de la escuela actualizados correctamente.');
     }
 }

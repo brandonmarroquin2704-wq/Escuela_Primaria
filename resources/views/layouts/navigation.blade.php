@@ -7,6 +7,7 @@
         $miUsuario = auth()->user()?->usuario;
     @endphp
 
+
     <aside
         class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-gradient-to-b from-blue-800 via-blue-700 to-indigo-900 text-white shadow-2xl transition-transform duration-300"
         :class="menuAbierto ? 'translate-x-0' : '-translate-x-full'"
@@ -17,12 +18,14 @@
                     Sistema escolar
                 </p>
 
+
                 <h1 class="mt-2 text-2xl font-extrabold leading-tight">
                     Primaria<br>
                     21 De Octubre
                 </h1>
             </a>
         </div>
+
 
         <div class="flex-1 overflow-y-auto px-4 py-6">
             <a
@@ -33,9 +36,9 @@
                 Dashboard
             </a>
 
+
             @if (
-                $miUsuario?->tienePermiso('Escuelas', 'Consultar')
-                || $miUsuario?->tienePermiso('Periodos escolares', 'Consultar')
+                $miUsuario?->tienePermiso('Periodos escolares', 'Consultar')
                 || $miUsuario?->tienePermiso('Roles', 'Consultar')
                 || $miUsuario?->tienePermiso('Usuarios', 'Consultar')
                 || $miUsuario?->tienePermiso('Asignaturas', 'Consultar')
@@ -54,6 +57,7 @@
                         Gestión escolar
                     </span>
 
+
                     <span
                         class="transition-transform duration-200"
                         :class="{ 'rotate-180': gestionAbierta }"
@@ -62,20 +66,12 @@
                     </span>
                 </button>
 
+
                 <div
                     x-show="gestionAbierta"
                     x-transition
                     class="mt-1 space-y-1 border-l border-blue-400/60 pl-3"
                 >
-                    @if ($miUsuario?->tienePermiso('Escuelas', 'Consultar'))
-                        <a
-                            href="{{ route('escuelas.index') }}"
-                            class="block rounded-lg px-4 py-2 text-sm text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs('escuelas.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
-                        >
-                            Escuelas
-                        </a>
-                    @endif
-
                     @if ($miUsuario?->tienePermiso('Periodos escolares', 'Consultar'))
                         <a
                             href="{{ route('periodos-escolares.index') }}"
@@ -84,6 +80,7 @@
                             Periodos escolares
                         </a>
                     @endif
+
 
                     @if ($miUsuario?->tienePermiso('Roles', 'Consultar'))
                         <a
@@ -94,6 +91,7 @@
                         </a>
                     @endif
 
+
                     @if ($miUsuario?->tienePermiso('Usuarios', 'Consultar'))
                         <a
                             href="{{ route('usuarios.index') }}"
@@ -102,6 +100,7 @@
                             Usuarios
                         </a>
                     @endif
+
 
                     @if ($miUsuario?->tienePermiso('Asignaturas', 'Consultar'))
                         <a
@@ -112,6 +111,7 @@
                         </a>
                     @endif
 
+
                     @if ($miUsuario?->tienePermiso('Grupos', 'Consultar'))
                         <a
                             href="{{ route('grupos.index') }}"
@@ -120,6 +120,7 @@
                             Grupos
                         </a>
                     @endif
+
 
                     @if ($miUsuario?->tienePermiso('Alumnos', 'Consultar'))
                         <a
@@ -130,6 +131,7 @@
                         </a>
                     @endif
 
+
                     @if ($miUsuario?->tienePermiso('Tutores y alumnos', 'Consultar'))
                         <a
                             href="{{ route('tutor-alumnos.index') }}"
@@ -138,6 +140,7 @@
                             Tutores y alumnos
                         </a>
                     @endif
+
 
                     @if ($miUsuario?->tienePermiso('Asignación de materias', 'Consultar'))
                         <a
@@ -151,19 +154,23 @@
             @endif
         </div>
 
+
         <div class="border-t border-blue-500 p-4">
             <div class="mb-3 rounded-lg bg-white/10 px-4 py-3">
                 <p class="truncate text-sm font-semibold">
                     {{ Auth::user()->name }}
                 </p>
 
+
                 <p class="mt-1 text-xs text-blue-200">
                     Sesión activa
                 </p>
             </div>
 
+
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
+
 
                 <button
                     type="submit"
@@ -176,12 +183,14 @@
         </div>
     </aside>
 
+
     <div
         x-show="menuAbierto"
         x-transition.opacity
         @click="menuAbierto = false"
         class="fixed inset-0 z-30 bg-slate-950/50 md:hidden"
     ></div>
+
 
     <div
         class="min-h-screen transition-all duration-300"
@@ -198,6 +207,7 @@
                     ☰
                 </button>
 
+
                 <div class="min-w-0 flex-1">
                     @isset($header)
                         {{ $header }}
@@ -207,6 +217,7 @@
                         </h2>
                     @endisset
                 </div>
+
 
                 <div class="hidden text-right sm:block">
                     <p class="text-xs font-medium uppercase tracking-wider text-slate-400">
@@ -219,6 +230,9 @@
             </div>
         </header>
 
+
         <main>
             {{ $slot }}
-      
+        </main>
+    </div>
+</nav>

@@ -2,9 +2,14 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+
+    <p>{{ $tipo === 'tutor' ? 'Acceso para padres o tutores' : 'Acceso para personal de la escuela' }}</p>
+    @if ($tipo === 'tutor')
+    <p><a href="{{ route('register') }}">¿Aún no tienes cuenta? Regístrate aquí</a></p>
+    @endif
     <form method="POST" action="{{ route('login') }}">
         @csrf
-
+    <input type="hidden" name="tipo" value="{{ $tipo }}">
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />
