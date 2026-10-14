@@ -1,3 +1,9 @@
+@php
+    $estiloRegistrar = 'background-color: #2563eb; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-weight: 600; text-decoration: none;';
+    $estiloEditar = 'background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;';
+    $estiloEliminar = 'background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;';
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -7,17 +13,21 @@
 
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+
             @if (session('success'))
                 <div class="mb-4 rounded bg-green-100 px-4 py-3 text-green-800">
                     {{ session('success') }}
                 </div>
             @endif
 
+            @if (session('error'))
+                <div class="mb-4 rounded bg-red-100 px-4 py-3 text-red-800">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <div class="mb-4">
-                <a
-                    href="{{ route('usuarios.create') }}"
-                    style="background-color: #2563eb; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-weight: 600; text-decoration: none;"
-                >
+                <a href="{{ route('usuarios.create') }}" style="{{ $estiloRegistrar }}">
                     Registrar usuario
                 </a>
             </div>
@@ -40,61 +50,41 @@
                         <tbody>
                             @forelse ($usuarios as $usuario)
                                 <tr>
-                                    <td class="border px-3 py-2">
-                                        {{ $usuario->idUsuario }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $usuario->idUsuario }}</td>
 
                                     <td class="border px-3 py-2">
-                                        {{ $usuario->nombre }}
-                                        {{ $usuario->apellidoPaterno }}
-                                        {{ $usuario->apellidoMaterno }}
+                                        {{ $usuario->nombre }} {{ $usuario->apellidoPaterno }} {{ $usuario->apellidoMaterno }}
                                     </td>
 
-                                    <td class="border px-3 py-2">
-                                        {{ $usuario->correo }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $usuario->correo }}</td>
 
-                                    <td class="border px-3 py-2">
-                                        {{ $usuario->rol?->nombre ?? 'Sin rol' }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $usuario->rol?->nombre ?? 'Sin rol' }}</td>
 
                                     <td class="border px-3 py-2">
                                         @if ($usuario->estado)
-                                            <span class="font-semibold text-green-700">
-                                                Activo
-                                            </span>
+                                            <span class="font-semibold text-green-700">Activo</span>
                                         @else
-                                            <span class="font-semibold text-red-700">
-                                                Inactivo
-                                            </span>
+                                            <span class="font-semibold text-red-700">Inactivo</span>
                                         @endif
                                     </td>
 
-                                    <td class="border px-3 py-2">
-                                        {{ $usuario->fRegistro?->format('d/m/Y') }}
-                                    </td>
+                                    <td class="border px-3 py-2">{{ $usuario->fRegistro?->format('d/m/Y') }}</td>
 
                                     <td class="border px-3 py-2">
                                         <div class="flex gap-2">
-                                            <a
-                                                href="{{ route('usuarios.edit', ['usuario' => $usuario->idUsuario]) }}"
-                                                style="background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
-                                            >
+                                            <a href="{{ route('usuarios.edit', $usuario->idUsuario) }}" style="{{ $estiloEditar }}">
                                                 Editar
                                             </a>
 
                                             <form
                                                 method="POST"
-                                                action="{{ route('usuarios.destroy', ['usuario' => $usuario->idUsuario]) }}"
+                                                action="{{ route('usuarios.destroy', $usuario->idUsuario) }}"
                                                 onsubmit="return confirm('¿Deseas eliminar este usuario?');"
                                             >
                                                 @csrf
                                                 @method('DELETE')
 
-                                                <button
-                                                    type="submit"
-                                                    style="background-color: #dc2626; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none;"
-                                                >
+                                                <button type="submit" style="{{ $estiloEliminar }}">
                                                     Eliminar
                                                 </button>
                                             </form>

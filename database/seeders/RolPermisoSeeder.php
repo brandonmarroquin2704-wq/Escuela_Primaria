@@ -25,7 +25,7 @@ class RolPermisoSeeder extends Seeder
                 'Periodos escolares' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar'],
                 'Roles' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar'],
                 'Usuarios' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar', 'Asignar'],
-                'Asignaturas' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar'],
+                'Asignaturas' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar', 'Eliminar'],
                 'Grupos' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar'],
                 'Alumnos' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar'],
                 'Tutores y alumnos' => ['Consultar', 'Registrar', 'Editar', 'Activar/Inactivar', 'Asignar'],
