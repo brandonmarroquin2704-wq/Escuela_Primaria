@@ -27,11 +27,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Perfil
-    Route::controller(ProfileController::class)->group(function () {
-        Route::get('/profile', 'edit')->name('profile.edit');
-        Route::patch('/profile', 'update')->name('profile.update');
-        Route::delete('/profile', 'destroy');
-    });
+     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
     // Tutor
     Route::prefix('tutor')->group(function () {

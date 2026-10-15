@@ -155,17 +155,18 @@
         </div>
 
 
-        <div class="border-t border-blue-500 p-4">
-            <div class="mb-3 rounded-lg bg-white/10 px-4 py-3">
-                <p class="truncate text-sm font-semibold">
-                    {{ Auth::user()->name }}
-                </p>
+        <a
+         href="{{ route('profile.edit') }}"
+    class="mb-3 block rounded-lg bg-white/10 px-4 py-3 transition hover:bg-white/20 {{ request()->routeIs('profile.edit') ? 'bg-white/20' : '' }}"
+        >
+        <p class="truncate text-sm font-semibold">
+        {{ Auth::user()->name }}
+        </p>
 
-
-                <p class="mt-1 text-xs text-blue-200">
-                    Sesión activa
-                </p>
-            </div>
+         <p class="mt-1 text-xs text-blue-200">
+        Mi perfil y contraseña
+         </p>
+        </a>
 
 
             <form method="POST" action="{{ route('logout') }}">
