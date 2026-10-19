@@ -50,6 +50,10 @@ Route::middleware(['auth', 'activa'])->group(function () {
         });
     });
 
+        // Mi cuenta
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+
     // Escuelas
     Route::controller(EscuelaController::class)->group(function () {
         Route::get('escuelas/create', 'create')->middleware('permiso:Escuelas,Registrar')->name('escuelas.create');
