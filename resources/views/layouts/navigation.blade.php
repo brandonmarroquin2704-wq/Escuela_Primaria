@@ -5,6 +5,31 @@
 >
     @php
         $miUsuario = auth()->user()?->usuario;
+        $rolNombre = $miUsuario?->rol?->nombre;
+
+        $claseLink = 'block rounded-lg px-4 py-3 text-lg font-semibold transition hover:bg-white/15';
+
+        // [ruta, patrón para resaltar, texto]
+        $enlaces = match ($rolNombre) {
+            'Docente' => [
+                ['docente.solicitudes.index', 'docente.solicitudes.*', 'Solicitudes de acceso'],
+                ['docente.calificaciones.index', 'docente.calificaciones.*', 'Capturar calificaciones'],
+            ],
+            'Tutor' => [
+                ['tutor.solicitudes.index', 'tutor.solicitudes.*', 'Buscar a mi hijo(a)'],
+            ],
+            default => [],
+        };
+
+        $enlaces[] = ['escuelas.show', 'escuelas.*', 'Información de la escuela'];
+
+        $hijos = $rolNombre === 'Tutor'
+            ? \App\Models\TutorAlumno::with('alumno')
+                ->where('usuario_idUsuario', $miUsuario->idUsuario)
+                ->where('estado', true)
+                ->whereHas('alumno', fn ($q) => $q->where('estado', true))
+                ->get()
+            : collect();
 
         // Módulo (permiso) => prefijo de la ruta
         $enlacesGestion = collect([
@@ -36,53 +61,79 @@
             </a>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-4 py-6">
+        <div class="flex-1 space-y-2 overflow-y-auto px-4 py-6">
             <a
                 href="{{ route('dashboard') }}"
-                class="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-lg font-semibold transition hover:bg-white/15 {{ request()->routeIs('dashboard') ? 'bg-white/20 shadow' : '' }}"
+                class="{{ $claseLink }} flex items-center gap-3 {{ request()->routeIs('dashboard') ? 'bg-white/20 shadow' : '' }}"
             >
                 <span>⌂</span>
                 Dashboard
             </a>
 
-            @if ($enlacesGestion->isNotEmpty())
-                <button
-                    type="button"
-                    @click="gestionAbierta = !gestionAbierta"
-                    class="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-lg font-semibold transition hover:bg-white/15"
+            @foreach ($enlaces as [$ruta, $patron, $texto])
+                <a
+                    href="{{ route($ruta) }}"
+                    class="{{ $claseLink }} {{ request()->routeIs($patron) ? 'bg-white/20 shadow' : '' }}"
                 >
-                    <span class="flex items-center gap-3">
-                        <span>▦</span>
-                        Gestión escolar
-                    </span>
+                    {{ $texto }}
+                </a>
+            @endforeach
 
-                    <span
-                        class="transition-transform duration-200"
-                        :class="{ 'rotate-180': gestionAbierta }"
+            @if ($hijos->isNotEmpty())
+                <p class="px-4 pt-3 text-sm font-semibold uppercase tracking-wider text-blue-200">
+                    Boletas de mis hijos
+                </p>
+
+                @foreach ($hijos as $vinculo)
+                    <a
+                        href="{{ route('tutor.boleta.show', $vinculo->alumno_idAlumno) }}"
+                        class="{{ $claseLink }} truncate {{ request()->routeIs('tutor.boleta.show') && (int) request()->route('alumno') === (int) $vinculo->alumno_idAlumno ? 'bg-white/20 shadow' : '' }}"
                     >
-                        ⌄
-                    </span>
-                </button>
+                        {{ $vinculo->alumno->nombre }} {{ $vinculo->alumno->apellidoPaterno }}
+                    </a>
+                @endforeach
+            @endif
 
-                <div
-                    x-show="gestionAbierta"
-                    x-transition
-                    class="mt-1 space-y-1 border-l border-blue-400/60 pl-3"
-                >
-                    @foreach ($enlacesGestion as $modulo => $prefijo)
-                        <a
-                            href="{{ route($prefijo . '.index') }}"
-                            class="block rounded-lg px-4 py-2 text-lg text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs($prefijo . '.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+            @if ($enlacesGestion->isNotEmpty())
+                <div>
+                    <button
+                        type="button"
+                        @click="gestionAbierta = !gestionAbierta"
+                        class="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-lg font-semibold transition hover:bg-white/15"
+                    >
+                        <span class="flex items-center gap-3">
+                            <span>▦</span>
+                            Gestión escolar
+                        </span>
+
+                        <span
+                            class="transition-transform duration-200"
+                            :class="{ 'rotate-180': gestionAbierta }"
                         >
-                            {{ $modulo }}
-                        </a>
-                    @endforeach
+                            ⌄
+                        </span>
+                    </button>
+
+                    <div
+                        x-show="gestionAbierta"
+                        x-transition
+                        class="mt-1 space-y-1 border-l border-blue-400/60 pl-3"
+                    >
+                        @foreach ($enlacesGestion as $modulo => $prefijo)
+                            <a
+                                href="{{ route($prefijo . '.index') }}"
+                                class="block rounded-lg px-4 py-2 text-lg text-blue-100 transition hover:bg-white/15 hover:text-white {{ request()->routeIs($prefijo . '.*') ? 'bg-white/20 font-semibold text-white' : '' }}"
+                            >
+                                {{ $modulo }}
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
             <a
                 href="{{ route('profile.edit') }}"
-                class="mt-3 block rounded-lg bg-white/10 px-4 py-3 text-lg font-semibold transition hover:bg-white/20 {{ request()->routeIs('profile.*') ? 'bg-white/20 shadow' : '' }}"
+                class="{{ $claseLink }} bg-white/10 {{ request()->routeIs('profile.*') ? 'bg-white/20 shadow' : '' }}"
             >
                 Mi cuenta
             </a>

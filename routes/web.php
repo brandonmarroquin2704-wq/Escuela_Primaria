@@ -62,8 +62,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::match(['put', 'patch'], 'escuelas/{escuela}', 'update')->middleware('permiso:Escuelas,Editar')->name('escuelas.update');
     });
 
-    // TEMPORAL: borrar cuando el menú lateral ya no enlace a /escuelas
-    Route::get('escuelas', fn () => redirect()->route('dashboard'));
+        Route::get('escuela', [EscuelaController::class, 'show'])->name('escuelas.show');
 
     // Roles (puedes comentar este bloque si ya no editas roles desde la interfaz)
     Route::controller(RolController::class)->group(function () {

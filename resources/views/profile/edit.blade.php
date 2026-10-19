@@ -15,7 +15,7 @@
 
                 <dl class="mt-4 grid grid-cols-1 gap-4 text-sm text-gray-700 sm:grid-cols-2">
                     <div>
-                        <dt class="font-semibold">account_box Nombre completo</dt>
+                        <dt class="font-semibold">Nombre completo</dt>
                         <dd>{{ $perfil?->nombre }} {{ $perfil?->apellidoPaterno }} {{ $perfil?->apellidoMaterno }}</dd>
                     </div>
 

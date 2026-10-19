@@ -1,10 +1,10 @@
 @php
-    $tarjetasAdmin = [
-        ['ruta' => 'usuarios.index', 'categoria' => 'Gestión', 'titulo' => 'Usuarios', 'texto' => 'Administra cuentas y roles.'],
-        ['ruta' => 'alumnos.index', 'categoria' => 'Control escolar', 'titulo' => 'Alumnos', 'texto' => 'Consulta y registra estudiantes.'],
-        ['ruta' => 'grupos.index', 'categoria' => 'Organización', 'titulo' => 'Grupos', 'texto' => 'Gestiona grados y grupos escolares.'],
-        ['ruta' => 'asignaciones-docentes.index', 'categoria' => 'Académico', 'titulo' => 'Materias', 'texto' => 'Asigna docentes por grupo y materia.'],
-    ];
+    $descripcion = [
+        'Administrador' => 'Administra la información académica, los grupos, alumnos, docentes y asignaturas desde un solo lugar.',
+        'Director' => 'Consulta la información institucional y académica autorizada desde el menú lateral.',
+        'Docente' => 'Consulta tus grupos asignados, atiende solicitudes de acceso al salón virtual y gestiona la información académica autorizada.',
+        'Tutor' => 'Consulta el estado de tus solicitudes y la información escolar autorizada de tus hijos.',
+    ][$rol] ?? '';
 @endphp
 
 <x-app-layout>
@@ -49,18 +49,9 @@
                         </p>
                     </div>
 
-                    <div class="mt-3 flex flex-wrap items-center gap-3 sm:mt-0">
-                        <p class="inline-flex w-fit rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white">
-                            ({{ $rol }})
-                        </p>
-
-                        <a
-                            href="{{ route('profile.edit') }}"
-                            class="rounded-lg bg-white px-4 py-2 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
-                        >
-                            Mi cuenta
-                        </a>
-                    </div>
+                    <p class="mt-3 inline-flex w-fit rounded-full bg-white/20 px-4 py-2 text-base font-bold text-white sm:mt-0">
+                        ({{ $rol }})
+                    </p>
                 </div>
 
                 <h1 class="mt-8 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-7xl">
@@ -68,93 +59,10 @@
                     Primaria 21 De Octubre
                 </h1>
 
-                @if ($rol === 'Administrador')
-                    <p class="mt-6 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg lg:text-xl">
-                        Administra la información académica, los grupos, alumnos,
-                        docentes y asignaturas desde un solo lugar.
-                    </p>
-                @elseif ($rol === 'Director')
-                    <p class="mt-6 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg lg:text-xl">
-                        Consulta la información institucional y académica autorizada
-                        desde el menú lateral.
-                    </p>
-                @elseif ($rol === 'Docente')
-                    <p class="mt-6 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg lg:text-xl">
-                        Consulta tus grupos asignados, atiende solicitudes de acceso al
-                        salón virtual y gestiona la información académica autorizada.
-                    </p>
-
-                    <div class="mt-9 flex flex-wrap gap-3">
-                        <a
-                            href="{{ route('docente.solicitudes.index') }}"
-                            class="rounded-lg bg-white px-5 py-3 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
-                        >
-                            Solicitudes de acceso
-                        </a>
-
-                        <a
-                            href="{{ route('docente.calificaciones.index') }}"
-                            class="rounded-lg border border-white/60 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15"
-                        >
-                            Capturar calificaciones
-                        </a>
-                    </div>
-                @elseif ($rol === 'Tutor')
-                    <p class="mt-6 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg lg:text-xl">
-                        Consulta el estado de tus solicitudes y la información escolar
-                        autorizada de tus hijos.
-                    </p>
-
-                    <div class="mt-9">
-                        <a
-                            href="{{ route('tutor.solicitudes.index') }}"
-                            class="rounded-lg bg-white px-5 py-3 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
-                        >
-                            Buscar a mi hijo(a)
-                        </a>
-                    </div>
-
-                    @if ($hijos->isNotEmpty())
-                        <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            @foreach ($hijos as $vinculo)
-                                <a
-                                    href="{{ route('tutor.boleta.show', $vinculo->alumno_idAlumno) }}"
-                                    class="rounded-xl border border-white/30 bg-white/10 p-4 transition hover:bg-white/20"
-                                >
-                                    <p class="text-lg font-bold text-white">
-                                        {{ $vinculo->alumno->nombre }} {{ $vinculo->alumno->apellidoPaterno }}
-                                    </p>
-                                    <p class="text-sm text-blue-100">
-                                        {{ $vinculo->alumno->grupo?->grado }}° {{ $vinculo->alumno->grupo?->letraGrupo }}
-                                        · Ver boleta
-                                    </p>
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-                @endif
+                <p class="mt-6 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg lg:text-xl">
+                    {{ $descripcion }}
+                </p>
             </section>
-
-            <x-escuela-info
-                :escuela="$escuela"
-                :puedeEditar="$puedeEditarEscuela"
-                :puedeRegistrar="$usuarioEscolar->tienePermiso('Escuelas', 'Registrar')"
-            />
-
-            @if ($rol === 'Administrador')
-                <section class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    @foreach ($tarjetasAdmin as $tarjeta)
-                        <a
-                            href="{{ route($tarjeta['ruta']) }}"
-                            class="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                        >
-                            <p class="text-sm font-semibold text-slate-500">{{ $tarjeta['categoria'] }}</p>
-                            <p class="mt-2 text-2xl font-extrabold text-blue-700">{{ $tarjeta['titulo'] }}</p>
-                            <p class="mt-2 text-sm text-slate-600">{{ $tarjeta['texto'] }}</p>
-                        </a>
-                    @endforeach
-                </section>
-            @endif
         </div>
     </div>
 </x-app-layout>
