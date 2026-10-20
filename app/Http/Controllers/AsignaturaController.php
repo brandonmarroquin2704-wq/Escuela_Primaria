@@ -10,9 +10,22 @@ use Illuminate\Validation\Rule;
 
 class AsignaturaController extends Controller
 {
-    public function index()
+        public function index(Request $request)
     {
-        $asignaturas = Asignatura::orderBy('nombre')->get();
+        $asignaturas = Asignatura::query()
+            // Búsqueda por nombre o descripción
+            ->when($request->filled('buscar'), function ($q) use ($request) {
+                $texto = '%' . $request->buscar . '%';
+
+                $q->where(fn ($q) => $q
+                    ->where('nombre', 'like', $texto)
+                    ->orWhere('descripcion', 'like', $texto));
+            })
+            // Filtro por estado
+            ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->estado))
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('asignaturas.index', compact('asignaturas'));
     }
