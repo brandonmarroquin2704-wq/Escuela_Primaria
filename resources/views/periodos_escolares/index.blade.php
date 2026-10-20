@@ -14,10 +14,11 @@
                     </div>
                 @endif
 
+                {{-- Botón para registrar un periodo --}}
                 <div class="mb-5">
                     <a
                         href="{{ route('periodos-escolares.create') }}"
-                        class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                        class="inline-block rounded border-2 border-black bg-white px-4 py-2 font-semibold text-black transition hover:bg-stone-100"
                     >
                         Registrar periodo escolar
                     </a>
@@ -27,7 +28,7 @@
                     <table class="min-w-full border border-gray-200">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th class="border px-3 py-2 text-left">ID</th>
+                                <th class="border px-3 py-2 text-left">No.</th>
                                 <th class="border px-3 py-2 text-left">Nombre</th>
                                 <th class="border px-3 py-2 text-left">Ciclo escolar</th>
                                 <th class="border px-3 py-2 text-left">Fecha de inicio</th>
@@ -39,28 +40,18 @@
                         <tbody>
                             @forelse ($periodos as $periodo)
                                 <tr>
-                                    <td class="border px-3 py-2">
-                                        {{ $periodo->idPeriodo }}
-                                    </td>
+                                    {{-- Número consecutivo, no el ID de la base de datos --}}
+                                    <td class="border px-3 py-2">{{ $loop->iteration }}</td>
+                                    <td class="border px-3 py-2">{{ $periodo->nombre }}</td>
+                                    <td class="border px-3 py-2">{{ $periodo->cicloEscolar }}</td>
+                                    <td class="border px-3 py-2">{{ $periodo->fechaInicio->format('d/m/Y') }}</td>
+                                    <td class="border px-3 py-2">{{ $periodo->fechaFin->format('d/m/Y') }}</td>
 
+                                    {{-- Estado: verde si está activo, rojo si no --}}
                                     <td class="border px-3 py-2">
-                                        {{ $periodo->nombre }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $periodo->cicloEscolar }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $periodo->fechaInicio->format('d/m/Y') }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $periodo->fechaFin->format('d/m/Y') }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $periodo->estado ? 'Activo' : 'Inactivo' }}
+                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $periodo->estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $periodo->estado ? 'Activo' : 'Inactivo' }}
+                                        </span>
                                     </td>
                                 </tr>
                             @empty

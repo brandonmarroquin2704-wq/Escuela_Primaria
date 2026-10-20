@@ -13,10 +13,11 @@
                 </div>
             @endif
 
+            {{-- Botón para registrar un rol --}}
             <div class="mb-4">
                 <a
                     href="{{ route('roles.create') }}"
-                    style="background-color: #2563eb; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-weight: 600; text-decoration: none;"
+                    class="inline-block rounded border-2 border-black bg-white px-4 py-2 font-semibold text-black transition hover:bg-stone-100"
                 >
                     Registrar rol
                 </a>
@@ -27,7 +28,7 @@
                     <table class="min-w-full border-collapse">
                         <thead>
                             <tr class="bg-gray-100">
-                                <th class="border px-3 py-2 text-left">ID</th>
+                                <th class="border px-3 py-2 text-left">No.</th>
                                 <th class="border px-3 py-2 text-left">Nombre</th>
                                 <th class="border px-3 py-2 text-left">Descripción</th>
                                 <th class="border px-3 py-2 text-left">Fecha de registro</th>
@@ -38,31 +39,19 @@
                         <tbody>
                             @forelse ($roles as $rol)
                                 <tr>
-                                    <td class="border px-3 py-2">
-                                        {{ $rol->idRol }}
-                                    </td>
+                                    {{-- Número consecutivo, no el ID de la base de datos --}}
+                                    <td class="border px-3 py-2">{{ $loop->iteration }}</td>
+                                    <td class="border px-3 py-2">{{ $rol->nombre }}</td>
+                                    <td class="border px-3 py-2">{{ $rol->descripcion ?? 'Sin descripción' }}</td>
+                                    <td class="border px-3 py-2">{{ $rol->created_at?->format('d/m/Y H:i') }}</td>
 
                                     <td class="border px-3 py-2">
-                                        {{ $rol->nombre }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $rol->descripcion ?? 'Sin descripción' }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        {{ $rol->created_at?->format('d/m/Y H:i') }}
-                                    </td>
-
-                                    <td class="border px-3 py-2">
-                                        <div class="flex gap-2">
-                                            <a
-                                                href="{{ route('roles.edit', ['role' => $rol->idRol]) }}"
-                                                style="background-color: #eab308; color: #000000; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none;"
-                                            >
-                                                Editar
-                                            </a>                        
-                                        </div>
+                                        <a
+                                            href="{{ route('roles.edit', ['role' => $rol->idRol]) }}"
+                                            class="inline-block rounded border-2 border-black bg-white px-3 py-1 text-sm font-semibold text-black transition hover:bg-stone-100"
+                                        >
+                                            Editar
+                                        </a>
                                     </td>
                                 </tr>
                             @empty

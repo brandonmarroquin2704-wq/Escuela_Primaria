@@ -26,9 +26,6 @@ Route::middleware(['auth', 'activa'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Perfil
-     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-
     // Tutor
     Route::prefix('tutor')->group(function () {
         Route::get('solicitudes', [SolicitudTutorController::class, 'index'])->name('tutor.solicitudes.index');
@@ -50,7 +47,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         });
     });
 
-        // Mi cuenta
+    // Mi cuenta
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 
@@ -62,7 +59,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::match(['put', 'patch'], 'escuelas/{escuela}', 'update')->middleware('permiso:Escuelas,Editar')->name('escuelas.update');
     });
 
-        Route::get('escuela', [EscuelaController::class, 'show'])->name('escuelas.show');
+    Route::get('escuela', [EscuelaController::class, 'show'])->name('escuelas.show');
 
     // Roles (puedes comentar este bloque si ya no editas roles desde la interfaz)
     Route::controller(RolController::class)->group(function () {
@@ -92,7 +89,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::match(['put', 'patch'], 'grupos/{grupo}', 'update')->middleware('permiso:Grupos,Editar')->name('grupos.update');
     });
 
-    //Asignaturas
+    // Asignaturas
     Route::controller(AsignaturaController::class)->group(function () {
         Route::get('asignaturas', 'index')
             ->middleware('permiso:Asignaturas,Consultar')
@@ -128,10 +125,38 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::match(['put', 'patch'], 'alumnos/{alumno}', 'update')->middleware('permiso:Alumnos,Editar')->name('alumnos.update');
     });
 
-    // Módulos con CRUD completo
-    Route::resource('periodos-escolares', PeriodoEscolarController::class);
-    Route::resource('tutor-alumnos', TutorAlumnoController::class);
-    Route::resource('asignaciones-docentes', AsignacionDocenteAsignaturaController::class);
+    // Periodos escolares
+    Route::controller(PeriodoEscolarController::class)->group(function () {
+        Route::get('periodos-escolares', 'index')->middleware('permiso:Periodos escolares,Consultar')->name('periodos-escolares.index');
+        Route::get('periodos-escolares/create', 'create')->middleware('permiso:Periodos escolares,Registrar')->name('periodos-escolares.create');
+        Route::post('periodos-escolares', 'store')->middleware('permiso:Periodos escolares,Registrar')->name('periodos-escolares.store');
+        Route::get('periodos-escolares/{periodoEscolar}', 'show')->middleware('permiso:Periodos escolares,Consultar')->name('periodos-escolares.show');
+        Route::get('periodos-escolares/{periodoEscolar}/edit', 'edit')->middleware('permiso:Periodos escolares,Editar')->name('periodos-escolares.edit');
+        Route::match(['put', 'patch'], 'periodos-escolares/{periodoEscolar}', 'update')->middleware('permiso:Periodos escolares,Editar')->name('periodos-escolares.update');
+        Route::delete('periodos-escolares/{periodoEscolar}', 'destroy')->middleware('permiso:Periodos escolares,Eliminar')->name('periodos-escolares.destroy');
+    });
+
+    // Tutores y alumnos
+    Route::controller(TutorAlumnoController::class)->group(function () {
+        Route::get('tutor-alumnos', 'index')->middleware('permiso:Tutores y alumnos,Consultar')->name('tutor-alumnos.index');
+        Route::get('tutor-alumnos/create', 'create')->middleware('permiso:Tutores y alumnos,Registrar')->name('tutor-alumnos.create');
+        Route::post('tutor-alumnos', 'store')->middleware('permiso:Tutores y alumnos,Registrar')->name('tutor-alumnos.store');
+        Route::get('tutor-alumnos/{id}', 'show')->middleware('permiso:Tutores y alumnos,Consultar')->name('tutor-alumnos.show');
+        Route::get('tutor-alumnos/{id}/edit', 'edit')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.edit');
+        Route::match(['put', 'patch'], 'tutor-alumnos/{id}', 'update')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.update');
+        Route::delete('tutor-alumnos/{id}', 'destroy')->middleware('permiso:Tutores y alumnos,Eliminar')->name('tutor-alumnos.destroy');
+    });
+
+    // Asignación de materias a docentes
+    Route::controller(AsignacionDocenteAsignaturaController::class)->group(function () {
+        Route::get('asignaciones-docentes', 'index')->middleware('permiso:Asignación de materias,Consultar')->name('asignaciones-docentes.index');
+        Route::get('asignaciones-docentes/create', 'create')->middleware('permiso:Asignación de materias,Registrar')->name('asignaciones-docentes.create');
+        Route::post('asignaciones-docentes', 'store')->middleware('permiso:Asignación de materias,Registrar')->name('asignaciones-docentes.store');
+        Route::get('asignaciones-docentes/{id}', 'show')->middleware('permiso:Asignación de materias,Consultar')->name('asignaciones-docentes.show');
+        Route::get('asignaciones-docentes/{id}/edit', 'edit')->middleware('permiso:Asignación de materias,Editar')->name('asignaciones-docentes.edit');
+        Route::match(['put', 'patch'], 'asignaciones-docentes/{id}', 'update')->middleware('permiso:Asignación de materias,Editar')->name('asignaciones-docentes.update');
+        Route::delete('asignaciones-docentes/{id}', 'destroy')->middleware('permiso:Asignación de materias,Eliminar')->name('asignaciones-docentes.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';
