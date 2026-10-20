@@ -61,14 +61,10 @@ Route::middleware(['auth', 'activa'])->group(function () {
 
     Route::get('escuela', [EscuelaController::class, 'show'])->name('escuelas.show');
 
-    // Roles (puedes comentar este bloque si ya no editas roles desde la interfaz)
-    Route::controller(RolController::class)->group(function () {
-        Route::get('roles', 'index')->middleware('permiso:Roles,Consultar')->name('roles.index');
-        Route::get('roles/create', 'create')->middleware('permiso:Roles,Registrar')->name('roles.create');
-        Route::post('roles', 'store')->middleware('permiso:Roles,Registrar')->name('roles.store');
-        Route::get('roles/{role}/edit', 'edit')->middleware('permiso:Roles,Editar')->name('roles.edit');
-        Route::match(['put', 'patch'], 'roles/{role}', 'update')->middleware('permiso:Roles,Editar')->name('roles.update');
-    });
+    // Roles (catálogo de solo consulta; los permisos se definen en RolPermisoSeeder)
+    Route::get('roles', [RolController::class, 'index'])
+        ->middleware('permiso:Roles,Consultar')
+        ->name('roles.index');
 
     // Usuarios
     Route::controller(UsuarioController::class)->group(function () {
@@ -77,7 +73,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::post('usuarios', 'store')->middleware('permiso:Usuarios,Registrar')->name('usuarios.store');
         Route::get('usuarios/{usuario}/edit', 'edit')->middleware('permiso:Usuarios,Editar')->name('usuarios.edit');
         Route::match(['put', 'patch'], 'usuarios/{usuario}', 'update')->middleware('permiso:Usuarios,Editar')->name('usuarios.update');
-        Route::delete('usuarios/{usuario}', 'destroy')->middleware('permiso:Usuarios,Eliminar')->name('usuarios.destroy');
+        Route::delete('usuarios/{usuario}', 'destroy')->middleware('permiso:Usuarios,Activar/Inactivar')->name('usuarios.destroy');
     });
 
     // Grupos
@@ -133,7 +129,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::get('periodos-escolares/{periodoEscolar}', 'show')->middleware('permiso:Periodos escolares,Consultar')->name('periodos-escolares.show');
         Route::get('periodos-escolares/{periodoEscolar}/edit', 'edit')->middleware('permiso:Periodos escolares,Editar')->name('periodos-escolares.edit');
         Route::match(['put', 'patch'], 'periodos-escolares/{periodoEscolar}', 'update')->middleware('permiso:Periodos escolares,Editar')->name('periodos-escolares.update');
-        Route::delete('periodos-escolares/{periodoEscolar}', 'destroy')->middleware('permiso:Periodos escolares,Eliminar')->name('periodos-escolares.destroy');
+        Route::delete('periodos-escolares/{periodoEscolar}', 'destroy')->middleware('permiso:Periodos escolares,Activar/Inactivar')->name('periodos-escolares.destroy');
     });
 
     // Tutores y alumnos
@@ -144,7 +140,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::get('tutor-alumnos/{id}', 'show')->middleware('permiso:Tutores y alumnos,Consultar')->name('tutor-alumnos.show');
         Route::get('tutor-alumnos/{id}/edit', 'edit')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.edit');
         Route::match(['put', 'patch'], 'tutor-alumnos/{id}', 'update')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.update');
-        Route::delete('tutor-alumnos/{id}', 'destroy')->middleware('permiso:Tutores y alumnos,Eliminar')->name('tutor-alumnos.destroy');
+        Route::delete('tutor-alumnos/{id}', 'destroy')->middleware('permiso:Tutores y alumnos,Activar/Inactivar')->name('tutor-alumnos.destroy');
     });
 
     // Asignación de materias a docentes
@@ -155,7 +151,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::get('asignaciones-docentes/{id}', 'show')->middleware('permiso:Asignación de materias,Consultar')->name('asignaciones-docentes.show');
         Route::get('asignaciones-docentes/{id}/edit', 'edit')->middleware('permiso:Asignación de materias,Editar')->name('asignaciones-docentes.edit');
         Route::match(['put', 'patch'], 'asignaciones-docentes/{id}', 'update')->middleware('permiso:Asignación de materias,Editar')->name('asignaciones-docentes.update');
-        Route::delete('asignaciones-docentes/{id}', 'destroy')->middleware('permiso:Asignación de materias,Eliminar')->name('asignaciones-docentes.destroy');
+        Route::delete('asignaciones-docentes/{id}', 'destroy')->middleware('permiso:Asignación de materias,Activar/Inactivar')->name('asignaciones-docentes.destroy');
     });
 });
 
