@@ -39,6 +39,21 @@ class ForoDocenteController extends Controller
         ];
     }
 
+    private function mensajes(): array
+{
+    return [
+        'asignacion_id.required' => 'Selecciona un grupo y una materia.',
+        'asignacion_id.exists' => 'Selecciona un grupo y una materia válidos.',
+        'tipo.required' => 'Selecciona el tipo de comunicado.',
+        'titulo.required' => 'Ingresa un título.',
+        'titulo.max' => 'El título supera el límite permitido.',
+        'contenido.required' => 'Escribe el mensaje del comunicado.',
+        'contenido.max' => 'El mensaje supera el límite permitido.',
+        'fecha_entrega.required_if' => 'Indica la fecha de entrega de la tarea.',
+        'fecha_entrega.after_or_equal' => 'La fecha de entrega no puede ser anterior a hoy.',
+    ];
+}
+
     public function index(Request $request)
     {
         $comunicados = Comunicado::with(['asignacion.grupo', 'asignacion.asignatura'])

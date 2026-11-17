@@ -10,7 +10,8 @@
     <div class="mx-auto max-w-2xl px-4 py-6 sm:px-6">
         <form method="POST"
               action="{{ $editando ? route('docente.foro.update', $comunicado) : route('docente.foro.store') }}"
-              x-data="{ tipo: '{{ old('tipo', $comunicado->tipo ?? 'anuncio') }}' }"
+              x-data="{ tipo: '{{ old('tipo', $comunicado->tipo ?? 'anuncio') }}', enviando: false }"
+              @submit="if (enviando) { $event.preventDefault(); return; } enviando = true"
               class="space-y-5 rounded-lg border border-[#DCE6F2] bg-white p-4 sm:p-6">
             @csrf
             @if ($editando) @method('PUT') @endif
@@ -64,7 +65,8 @@
 
             <div class="flex flex-col gap-2 sm:flex-row">
                 <button type="submit"
-                        class="flex min-h-12 items-center justify-center rounded-lg bg-[#1E3A5F] px-5 py-3 font-bold text-white hover:bg-[#2563A6]">
+                        :disabled="enviando"
+                        class="flex min-h-12 items-center justify-center rounded-lg bg-[#1E3A5F] px-5 py-3 font-bold text-white hover:bg-[#2563A6] disabled:cursor-not-allowed disabled:opacity-70">
                     {{ $editando ? 'Guardar cambios' : 'Publicar' }}
                 </button>
                 <a href="{{ route('docente.foro.index') }}"
