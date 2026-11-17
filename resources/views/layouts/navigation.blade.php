@@ -8,13 +8,12 @@
         $miUsuario = auth()->user()?->usuario;
         $rolNombre = $miUsuario?->rol?->nombre;
 
-        // Iconos 
+        // Iconos
         $iconos = [
             'inicio'   => 'M10.7 2.3a1 1 0 0 0-1.4 0l-7 7A1 1 0 0 0 3 11h1v6a1 1 0 0 0 1 1h3v-4h4v4h3a1 1 0 0 0 1-1v-6h1a1 1 0 0 0 .7-1.7l-7-7z',
             'solicitud'=> 'M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8h-4l-1 2H8l-1-2H3V4zm0 10h3.4l1 2h5.2l1-2H17v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2z',
             'lapiz'    => 'M13.600 2.400a2 2 0 0 1 2.800 2.800L7 14.600 3 15.500l.9-4 9.700-9.100z',
             'buscar'   => 'M8 3a5 5 0 1 0 3.100 8.900l3.500 3.500a1 1 0 0 0 1.400-1.400l-3.500-3.500A5 5 0 0 0 8 3zM5 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0z',
-            'escuela'  => 'M10 2 1.500 6.500 10 11l6.500-3.400V13H18V6.500L10 2zM4.500 10.800v3.200c0 1.200 2.500 2.500 5.500 2.500s5.500-1.300 5.500-2.500v-3.200L10 13.700l-5.500-2.900z',
             'gestion'  => 'M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z',
             'usuario'  => 'M10 9a3.500 3.500 0 1 0 0-7 3.500 3.500 0 0 0 0 7zM3 17a7 7 0 0 1 14 0v.5H3V17z',
             'boleta'   => 'M5 2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.400a2 2 0 0 0-.6-1.400L12.600 2.600A2 2 0 0 0 11.200 2H5zm2 8h6v1.500H7V10zm0 3h6v1.500H7V13z',
@@ -35,13 +34,14 @@
                 'Docente' => [
                     ['docente.solicitudes.index', 'docente.solicitudes.*', 'Solicitudes de acceso', 'solicitud'],
                     ['docente.calificaciones.index', 'docente.calificaciones.*', 'Capturar calificaciones', 'lapiz'],
+                    ['docente.foro.index', 'docente.foro.*', 'Foro de avisos', 'solicitud'],
                 ],
                 'Tutor' => [
                     ['tutor.solicitudes.index', 'tutor.solicitudes.*', 'Buscar a mi hijo(a)', 'buscar'],
+                    ['tutor.foro.index', 'tutor.foro.*', 'Avisos de los docentes', 'solicitud'],
                 ],
                 default => [],
             },
-
         ];
 
         // Hijos activos del tutor (solo si el rol es Tutor)
@@ -68,7 +68,7 @@
 
     {{-- Menú lateral --}}
     <aside
-        class="fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r border-[#DCE6F2] bg-white text-[#263548] shadow-xl transition-transform duration-300 motion-reduce:transition-none"
+        class="fixed inset-y-0 left-0 z-40 flex w-80 max-w-[85vw] flex-col border-r border-[#DCE6F2] bg-white text-[#263548] shadow-xl transition-transform duration-300 motion-reduce:transition-none"
         :class="menuAbierto ? 'translate-x-0' : '-translate-x-full'"
         aria-label="Menú principal"
     >
@@ -87,6 +87,7 @@
             @foreach ($enlaces as $enlace)
                 <a
                     href="{{ route($enlace[0]) }}"
+                    @click="if (window.innerWidth < 768) menuAbierto = false"
                     class="{{ $link(request()->routeIs($enlace[1])) }}"
                     @if (request()->routeIs($enlace[1])) aria-current="page" @endif
                 >
@@ -105,6 +106,7 @@
                     @php $boletaActiva = request()->routeIs('tutor.boleta.show') && (int) request()->route('alumno') === (int) $vinculo->alumno_idAlumno; @endphp
                     <a
                         href="{{ route('tutor.boleta.show', $vinculo->alumno_idAlumno) }}"
+                        @click="if (window.innerWidth < 768) menuAbierto = false"
                         class="{{ $link($boletaActiva, 'truncate') }}"
                         @if ($boletaActiva) aria-current="page" @endif
                     >
@@ -137,6 +139,7 @@
                             @php $moduloActivo = request()->routeIs($prefijo . '.*'); @endphp
                             <a
                                 href="{{ route($prefijo . '.index') }}"
+                                @click="if (window.innerWidth < 768) menuAbierto = false"
                                 class="{{ $link($moduloActivo, '!py-2') }}"
                                 @if ($moduloActivo) aria-current="page" @endif
                             >
@@ -151,6 +154,7 @@
                 @php $cuentaActiva = request()->routeIs('profile.*'); @endphp
                 <a
                     href="{{ route('profile.edit') }}"
+                    @click="if (window.innerWidth < 768) menuAbierto = false"
                     class="{{ $link($cuentaActiva) }}"
                     @if ($cuentaActiva) aria-current="page" @endif
                 >

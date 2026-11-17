@@ -16,6 +16,8 @@ use App\Http\Controllers\SolicitudTutorController;
 use App\Http\Controllers\TutorAlumnoController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ForoDocenteController;
+use App\Http\Controllers\ForoTutorController;
 
 // Pública
 Route::get('/', [AccesoController::class, 'inicio'])->name('acceso.inicio');
@@ -27,6 +29,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
 
     // Tutor (solo rol Tutor)
     Route::prefix('tutor')->middleware('rol:Tutor')->group(function () {
+        Route::get('foro', [ForoTutorController::class, 'index'])->name('tutor.foro.index');
         Route::get('solicitudes', [SolicitudTutorController::class, 'index'])->name('tutor.solicitudes.index');
         Route::post('solicitudes', [SolicitudTutorController::class, 'store'])->name('tutor.solicitudes.store');
         Route::get('hijos/{alumno}/boleta', [BoletaTutorController::class, 'show'])->name('tutor.boleta.show');
@@ -38,6 +41,14 @@ Route::middleware(['auth', 'activa'])->group(function () {
             Route::get('solicitudes', 'index')->name('docente.solicitudes.index');
             Route::post('solicitudes/{solicitud}/aprobar', 'aprobar')->name('docente.solicitudes.aprobar');
             Route::post('solicitudes/{solicitud}/rechazar', 'rechazar')->name('docente.solicitudes.rechazar');
+            Route::controller(ForoDocenteController::class)->group(function () {
+        Route::get('foro', 'index')->name('docente.foro.index');
+        Route::get('foro/create', 'create')->name('docente.foro.create');
+        Route::post('foro', 'store')->middleware('throttle:20,1')->name('docente.foro.store');
+        Route::get('foro/{comunicado}/edit', 'edit')->name('docente.foro.edit');
+        Route::match(['put', 'patch'], 'foro/{comunicado}', 'update')->middleware('throttle:20,1')->name('docente.foro.update');
+        Route::delete('foro/{comunicado}', 'destroy')->middleware('throttle:20,1')->name('docente.foro.destroy');
+});
         });
 
         Route::controller(CalificacionDocenteController::class)->group(function () {
