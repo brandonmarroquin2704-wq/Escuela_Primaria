@@ -3,59 +3,68 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alumno;
+use App\Models\Grupo;
 use App\Models\TutorAlumno;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
-use App\Models\Grupo;
 
 class TutorAlumnoController extends Controller
 {
     public function index(Request $request)
-{
-    // Valida la búsqueda y los filtros.
-    $filtros = $request->validate([
-        'buscar' => ['nullable', 'string', 'max:100'],
-        'grupo' => ['nullable', 'integer', 'exists:grupos,idGrupo'],
-        'estado' => ['nullable', 'in:0,1'],
-    ]);
+    {
+        // Valida la búsqueda y los filtros.
+        $filtros = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:100'],
+            'grupo' => ['nullable', 'integer', 'exists:grupos,idGrupo'],
+            'estado' => ['nullable', 'in:0,1'],
+        ]);
 
-    $relaciones = TutorAlumno::with(['tutor', 'alumno.grupo'])
-        // Busca coincidencias en el tutor o el alumno.
-        ->when($request->filled('buscar'), function ($consulta) use ($filtros) {
-            $texto = '%' . trim($filtros['buscar']) . '%';
+        $consulta = TutorAlumno::with(['tutor', 'alumno.grupo'])
+            // Busca coincidencias en el tutor o el alumno.
+            ->when($request->filled('buscar'), function ($consulta) use ($filtros) {
+                $texto = '%' . trim($filtros['buscar']) . '%';
 
-            $buscarPersona = fn ($persona) => $persona
-                ->where('nombre', 'like', $texto)
-                ->orWhere('apellidoPaterno', 'like', $texto)
-                ->orWhere('apellidoMaterno', 'like', $texto);
+                $buscarPersona = fn ($persona) => $persona
+                    ->where('nombre', 'like', $texto)
+                    ->orWhere('apellidoPaterno', 'like', $texto)
+                    ->orWhere('apellidoMaterno', 'like', $texto);
 
-            $consulta->where(fn ($personas) => $personas
-                ->whereHas('tutor', $buscarPersona)
-                ->orWhereHas('alumno', $buscarPersona));
-        })
-        // Filtra por el grupo del alumno.
-        ->when($request->filled('grupo'), function ($consulta) use ($filtros) {
-            $consulta->whereHas('alumno', fn ($alumno) => $alumno
-                ->where('grupo_idGrupo', $filtros['grupo']));
-        })
-        ->when(
-            $request->filled('estado'),
-            fn ($consulta) => $consulta->where('estado', $filtros['estado'])
-        )
-        ->orderBy('alumno_idAlumno')
-        ->orderByDesc('esResponsable')
-        ->orderBy('id')
-        ->paginate(10)
-        ->withQueryString();
+                $consulta->where(fn ($personas) => $personas
+                    ->whereHas('tutor', $buscarPersona)
+                    ->orWhereHas('alumno', $buscarPersona));
+            })
+            // Filtra por el grupo del alumno.
+            ->when($request->filled('grupo'), function ($consulta) use ($filtros) {
+                $consulta->whereHas('alumno', fn ($alumno) => $alumno
+                    ->where('grupo_idGrupo', $filtros['grupo']));
+            })
+            ->when(
+                $request->filled('estado'),
+                fn ($consulta) => $consulta->where('estado', $filtros['estado'])
+            );
 
-    // Incluye todos los grupos para consultar relaciones anteriores.
-    $grupos = Grupo::orderByDesc('cicloEsc')
-        ->orderBy('grado')
-        ->orderBy('letraGrupo')
-        ->get();
+        // Totales sobre todo el resultado filtrado, no solo la página actual.
+        $totales = [
+            'total' => (clone $consulta)->count(),
+            'activos' => (clone $consulta)->where('estado', true)->count(),
+            'inactivos' => (clone $consulta)->where('estado', false)->count(),
+        ];
 
-    return view('tutor_alumnos.index', compact('relaciones', 'grupos'));
-}
+        $relaciones = $consulta
+            ->orderBy('alumno_idAlumno')
+            ->orderByDesc('esResponsable')
+            ->orderBy('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Incluye todos los grupos para consultar relaciones anteriores.
+        $grupos = Grupo::orderByDesc('cicloEsc')
+            ->orderBy('grado')
+            ->orderBy('letraGrupo')
+            ->get();
+
+        return view('tutor_alumnos.index', compact('relaciones', 'grupos', 'totales'));
+    }
 
     public function create()
     {
@@ -180,14 +189,26 @@ class TutorAlumnoController extends Controller
             ->with('success', 'Relación tutor-alumno actualizada correctamente.');
     }
 
+    // Inactiva o reactiva la relación; no se borra para conservar el historial.
     public function destroy($id)
     {
         $relacion = TutorAlumno::findOrFail($id);
+        $nuevoEstado = ! $relacion->estado;
 
-        $relacion->delete();
+        // Al reactivar un responsable, solo puede haber uno activo por alumno.
+        if ($nuevoEstado && $relacion->esResponsable) {
+            TutorAlumno::where('alumno_idAlumno', $relacion->alumno_idAlumno)
+                ->where('estado', true)
+                ->where('id', '!=', $relacion->id)
+                ->update(['esResponsable' => false]);
+        }
+
+        $relacion->update(['estado' => $nuevoEstado]);
 
         return redirect()
             ->route('tutor-alumnos.index')
-            ->with('success', 'Relación tutor-alumno eliminada correctamente.');
+            ->with('success', $nuevoEstado
+                ? 'Relación tutor-alumno reactivada correctamente.'
+                : 'Relación tutor-alumno inactivada correctamente.');
     }
 }

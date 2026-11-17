@@ -121,7 +121,7 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::delete('periodos-escolares/{periodoEscolar}', 'destroy')->middleware('permiso:Periodos escolares,Activar/Inactivar')->name('periodos-escolares.destroy');
     });
 
-    // Tutores y alumnos: consulta, registro y edición.
+    // Tutores y alumnos: consulta, registro, edición e inactivación.
     Route::controller(TutorAlumnoController::class)->group(function () {
         Route::get('tutor-alumnos', 'index')
             ->middleware('permiso:Tutores y alumnos,Consultar')
@@ -146,6 +146,10 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::match(['put', 'patch'], 'tutor-alumnos/{id}', 'update')
             ->middleware('permiso:Tutores y alumnos,Editar')
             ->name('tutor-alumnos.update');
+
+        Route::delete('tutor-alumnos/{id}', 'destroy')
+            ->middleware('permiso:Tutores y alumnos,Activar/Inactivar')
+            ->name('tutor-alumnos.destroy');
     });
 
     // Asignación de materias a docentes
