@@ -5,15 +5,15 @@
     @php($esTutor = $tipo === 'tutor')
 
     {{-- Título según el tipo de acceso --}}
-    <h2 class="text-xl font-bold text-stone-800">
+    <h2 class="text-xl font-bold text-blue-900">
         {{ $esTutor ? 'Acceso para padres o tutores' : 'Acceso para personal de la escuela' }}
     </h2>
 
     {{-- Enlace de registro (solo tutores) --}}
     @if ($esTutor)
-        <p class="mt-1 text-sm text-stone-600">
+        <p class="mt-1 text-sm text-slate-600">
             ¿Aún no tienes cuenta?
-            <a href="{{ route('register') }}" class="font-semibold text-emerald-700 hover:text-emerald-900 hover:underline">Regístrate aquí</a>
+            <a href="{{ route('register') }}" class="font-semibold text-blue-700 hover:text-blue-900 hover:underline">Regístrate aquí</a>
         </p>
     @endif
 
@@ -37,19 +37,19 @@
 
         {{-- Mantener la sesión iniciada --}}
         <label for="recordarme" class="inline-flex items-center">
-            <input id="recordarme" type="checkbox" name="remember" class="rounded border-stone-300 text-emerald-700 shadow-sm focus:ring-emerald-600">
-            <span class="ms-2 text-sm text-stone-600">Mantener sesión iniciada</span>
+            <input id="recordarme" type="checkbox" name="remember" class="rounded border-slate-300 text-blue-700 shadow-sm focus:ring-blue-600">
+            <span class="ms-2 text-sm text-slate-600">Mantener sesión iniciada</span>
         </label>
 
         {{-- Acciones --}}
         <div class="flex items-center justify-end gap-3">
             @if (Route::has('password.request'))
-                <a href="{{ route('password.request') }}" class="text-sm text-stone-600 underline hover:text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 rounded-md">
+                <a href="{{ route('password.request') }}" class="text-sm text-slate-600 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 rounded-md">
                     ¿Olvidaste tu contraseña?
                 </a>
             @endif
 
-            <button type="submit" class="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">
+            <button type="submit" class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
                 Iniciar sesión
             </button>
         </div>

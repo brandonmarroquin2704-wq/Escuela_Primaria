@@ -10,14 +10,17 @@
             <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
                 <form
                     method="POST"
-                    action="{{ route('asignaciones-docentes.update', ['asignaciones_docente' => $asignacion->id]) }}"
+                    action="{{ route('asignaciones-docentes.update', ['id' => $asignacion->id]) }}"
                 >
                     @csrf
                     @method('PUT')
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                            <label for="grupo_idGrupo" class="block text-sm font-medium text-gray-700">
+                            <label
+                                for="grupo_idGrupo"
+                                class="block text-sm font-medium text-gray-700"
+                            >
                                 Grupo
                             </label>
 
@@ -41,12 +44,17 @@
                             </select>
 
                             @error('grupo_idGrupo')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600">
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="asignatura_idAsignatura" class="block text-sm font-medium text-gray-700">
+                            <label
+                                for="asignatura_idAsignatura"
+                                class="block text-sm font-medium text-gray-700"
+                            >
                                 Asignatura
                             </label>
 
@@ -69,12 +77,17 @@
                             </select>
 
                             @error('asignatura_idAsignatura')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600">
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="docente_idUsuario" class="block text-sm font-medium text-gray-700">
+                            <label
+                                for="docente_idUsuario"
+                                class="block text-sm font-medium text-gray-700"
+                            >
                                 Docente que imparte la asignatura
                             </label>
 
@@ -99,12 +112,17 @@
                             </select>
 
                             @error('docente_idUsuario')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600">
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="estado" class="block text-sm font-medium text-gray-700">
+                            <label
+                                for="estado"
+                                class="block text-sm font-medium text-gray-700"
+                            >
                                 Estado
                             </label>
 
@@ -130,7 +148,9 @@
                             </select>
 
                             @error('estado')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600">
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
                     </div>

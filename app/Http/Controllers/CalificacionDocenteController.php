@@ -17,15 +17,7 @@ class CalificacionDocenteController extends Controller
 {
     private function docente()
     {
-        $perfil = Auth::user()->usuario;
-
-        abort_unless(
-            $perfil && $perfil->rol?->nombre === 'Docente',
-            403,
-            'Esta sección es solo para docentes.'
-        );
-
-        return $perfil;
+        return Auth::user()->usuario;
     }
 
     private function asignacionesDe($docente)
@@ -57,9 +49,11 @@ class CalificacionDocenteController extends Controller
 
         $asignacionSel = $asignaciones->firstWhere('id', (int) $request->query('asignacion'));
         $periodoSel = $periodos->firstWhere('idPeriodo', (int) $request->query('periodo'));
-                if ($periodoSel && $periodoSel->fechaInicio->isFuture()) {
+
+        if ($periodoSel && $periodoSel->fechaInicio->isFuture()) {
             $periodoSel = null;
         }
+
         $alumnos = collect();
         $calificaciones = collect();
         $cierre = null;
@@ -112,6 +106,7 @@ class CalificacionDocenteController extends Controller
                 'calificaciones' => $periodo->nombre . ' inicia el ' . $periodo->fechaInicio->format('d/m/Y') . '. Aún no se pueden capturar calificaciones.',
             ]);
         }
+
         $alumnosGrupo = Alumno::where('estado', true)
             ->where('grupo_idGrupo', $asignacion->grupo_idGrupo)
             ->pluck('idAlumno')

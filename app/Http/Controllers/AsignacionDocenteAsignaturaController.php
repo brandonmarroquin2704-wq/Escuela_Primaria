@@ -10,19 +10,86 @@ use Illuminate\Http\Request;
 
 class AsignacionDocenteAsignaturaController extends Controller
 {
-    public function index()
-    {
-        $asignaciones = AsignacionDocenteAsignatura::with([
-            'grupo',
-            'asignatura',
-            'docente',
-        ])
-            ->orderBy('grupo_idGrupo')
-            ->orderBy('asignatura_idAsignatura')
-            ->get();
+    public function index(Request $request)
+{
+    $filtros = $request->validate([
+        'buscar' => ['nullable', 'string', 'max:150'],
+        'grupo' => ['nullable', 'integer', 'exists:grupos,idGrupo'],
+        'ciclo' => ['nullable', 'string', 'max:50'],
+        'estado' => ['nullable', 'in:0,1'],
+    ]);
 
-        return view('asignacion_docente_asignaturas.index', compact('asignaciones'));
+    $buscar = trim($filtros['buscar'] ?? '');
+    $grupoSeleccionado = $filtros['grupo'] ?? '';
+    $cicloSeleccionado = $filtros['ciclo'] ?? '';
+    $estadoSeleccionado = $filtros['estado'] ?? '';
+
+    $consulta = AsignacionDocenteAsignatura::query()
+        ->with(['grupo', 'asignatura', 'docente']);
+
+    if ($buscar !== '') {
+        $palabras = preg_split('/\s+/u', $buscar, -1, PREG_SPLIT_NO_EMPTY);
+
+        $consulta->where(function ($query) use ($buscar, $palabras) {
+            $query->whereHas('asignatura', function ($asignatura) use ($buscar) {
+                $asignatura->where('nombre', 'like', '%' . $buscar . '%');
+            })
+            ->orWhereHas('docente', function ($docente) use ($palabras) {
+                foreach ($palabras as $palabra) {
+                    $docente->where(function ($nombre) use ($palabra) {
+                        $nombre->where('nombre', 'like', '%' . $palabra . '%')
+                            ->orWhere('apellidoPaterno', 'like', '%' . $palabra . '%')
+                            ->orWhere('apellidoMaterno', 'like', '%' . $palabra . '%');
+                    });
+                }
+            });
+        });
     }
+
+    if ($grupoSeleccionado !== '') {
+        $consulta->where('grupo_idGrupo', $grupoSeleccionado);
+    }
+
+    if ($cicloSeleccionado !== '') {
+        $consulta->whereHas('grupo', function ($grupo) use ($cicloSeleccionado) {
+            $grupo->where('cicloEsc', $cicloSeleccionado);
+        });
+    }
+
+    if ($estadoSeleccionado !== '') {
+        $consulta->where('estado', (int) $estadoSeleccionado);
+    }
+
+    $asignaciones = $consulta
+        ->orderBy('grupo_idGrupo')
+        ->orderBy('asignatura_idAsignatura')
+        ->orderBy('id')
+        ->paginate(15)
+        ->withQueryString();
+
+    $grupos = Grupo::query()
+        ->orderByDesc('cicloEsc')
+        ->orderBy('grado')
+        ->orderBy('letraGrupo')
+        ->get();
+
+    $ciclos = Grupo::query()
+        ->whereNotNull('cicloEsc')
+        ->where('cicloEsc', '!=', '')
+        ->distinct()
+        ->orderByDesc('cicloEsc')
+        ->pluck('cicloEsc');
+
+    return view('asignacion_docente_asignaturas.index', compact(
+        'asignaciones',
+        'grupos',
+        'ciclos',
+        'buscar',
+        'grupoSeleccionado',
+        'cicloSeleccionado',
+        'estadoSeleccionado'
+    ));
+}
 
     public function create()
     {

@@ -6,18 +6,56 @@ use App\Models\Alumno;
 use App\Models\TutorAlumno;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use App\Models\Grupo;
 
 class TutorAlumnoController extends Controller
 {
-    public function index()
-    {
-        $relaciones = TutorAlumno::with(['tutor', 'alumno.grupo'])
-            ->orderBy('alumno_idAlumno')
-            ->orderByDesc('esResponsable')
-            ->get();
+    public function index(Request $request)
+{
+    // Valida la búsqueda y los filtros.
+    $filtros = $request->validate([
+        'buscar' => ['nullable', 'string', 'max:100'],
+        'grupo' => ['nullable', 'integer', 'exists:grupos,idGrupo'],
+        'estado' => ['nullable', 'in:0,1'],
+    ]);
 
-        return view('tutor_alumnos.index', compact('relaciones'));
-    }
+    $relaciones = TutorAlumno::with(['tutor', 'alumno.grupo'])
+        // Busca coincidencias en el tutor o el alumno.
+        ->when($request->filled('buscar'), function ($consulta) use ($filtros) {
+            $texto = '%' . trim($filtros['buscar']) . '%';
+
+            $buscarPersona = fn ($persona) => $persona
+                ->where('nombre', 'like', $texto)
+                ->orWhere('apellidoPaterno', 'like', $texto)
+                ->orWhere('apellidoMaterno', 'like', $texto);
+
+            $consulta->where(fn ($personas) => $personas
+                ->whereHas('tutor', $buscarPersona)
+                ->orWhereHas('alumno', $buscarPersona));
+        })
+        // Filtra por el grupo del alumno.
+        ->when($request->filled('grupo'), function ($consulta) use ($filtros) {
+            $consulta->whereHas('alumno', fn ($alumno) => $alumno
+                ->where('grupo_idGrupo', $filtros['grupo']));
+        })
+        ->when(
+            $request->filled('estado'),
+            fn ($consulta) => $consulta->where('estado', $filtros['estado'])
+        )
+        ->orderBy('alumno_idAlumno')
+        ->orderByDesc('esResponsable')
+        ->orderBy('id')
+        ->paginate(10)
+        ->withQueryString();
+
+    // Incluye todos los grupos para consultar relaciones anteriores.
+    $grupos = Grupo::orderByDesc('cicloEsc')
+        ->orderBy('grado')
+        ->orderBy('letraGrupo')
+        ->get();
+
+    return view('tutor_alumnos.index', compact('relaciones', 'grupos'));
+}
 
     public function create()
     {

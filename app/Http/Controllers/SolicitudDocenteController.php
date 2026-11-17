@@ -14,15 +14,7 @@ class SolicitudDocenteController extends Controller
 {
     private function docente()
     {
-        $perfil = Auth::user()->usuario;
-
-        abort_unless(
-            $perfil && $perfil->rol?->nombre === 'Docente',
-            403,
-            'Esta sección es solo para docentes.'
-        );
-
-        return $perfil;
+        return Auth::user()->usuario;
     }
 
     private function deMiGrupo($docente)

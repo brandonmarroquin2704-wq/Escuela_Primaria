@@ -8,16 +8,51 @@ use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
 {
-    public function index()
-    {
-        $alumnos = Alumno::with('grupo')
-            ->orderBy('apellidoPaterno')
-            ->orderBy('apellidoMaterno')
-            ->orderBy('nombre')
-            ->get();
+    public function index(Request $request)
+{
+    // Valida la búsqueda y los filtros.
+    $filtros = $request->validate([
+        'buscar' => ['nullable', 'string', 'max:100'],
+        'grupo' => ['nullable', 'integer', 'exists:grupos,idGrupo'],
+        'estado' => ['nullable', 'in:0,1'],
+    ]);
 
-        return view('alumnos.index', compact('alumnos'));
-    }
+    $alumnos = Alumno::with('grupo')
+        // Busca por nombre o apellidos.
+        ->when($request->filled('buscar'), function ($consulta) use ($filtros) {
+            $texto = '%' . trim($filtros['buscar']) . '%';
+
+            $consulta->where(function ($consulta) use ($texto) {
+                $consulta->where('nombre', 'like', $texto)
+                    ->orWhere('apellidoPaterno', 'like', $texto)
+                    ->orWhere('apellidoMaterno', 'like', $texto);
+            });
+        })
+        // Filtra por grupo y estado.
+        ->when(
+            $request->filled('grupo'),
+            fn ($consulta) => $consulta->where('grupo_idGrupo', $filtros['grupo'])
+        )
+        ->when(
+            $request->filled('estado'),
+            fn ($consulta) => $consulta->where('estado', $filtros['estado'])
+        )
+        // Ordena por apellidos y nombre.
+        ->orderBy('apellidoPaterno')
+        ->orderBy('apellidoMaterno')
+        ->orderBy('nombre')
+        ->orderBy('idAlumno')
+        ->paginate(10)
+        ->withQueryString();
+
+    // Incluye grupos activos e inactivos para consultar el historial.
+    $grupos = Grupo::orderByDesc('cicloEsc')
+        ->orderBy('grado')
+        ->orderBy('letraGrupo')
+        ->get();
+
+    return view('alumnos.index', compact('alumnos', 'grupos'));
+}
 
     public function create()
     {

@@ -10,16 +10,36 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $usuarios = Usuario::with('rol')
-            ->orderBy('idUsuario')
-            ->get();
+            // Búsqueda por nombre, apellidos o correo
+            ->when($request->filled('buscar'), function ($q) use ($request) {
+                $texto = '%' . $request->buscar . '%';
 
-        return view('usuarios.index', compact('usuarios'));
+                $q->where(fn ($q) => $q
+                    ->where('nombre', 'like', $texto)
+                    ->orWhere('apellidoPaterno', 'like', $texto)
+                    ->orWhere('apellidoMaterno', 'like', $texto)
+                    ->orWhere('correo', 'like', $texto));
+            })
+            // Filtros por rol y estado
+            ->when($request->filled('rol'), fn ($q) => $q->where('rol_idRol', $request->rol))
+            ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->estado))
+            // Orden alfabético por apellidos
+            ->orderBy('apellidoPaterno')
+            ->orderBy('apellidoMaterno')
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
+
+        $roles = Rol::orderBy('nombre')->get();
+
+        return view('usuarios.index', compact('usuarios', 'roles'));
     }
 
     public function create()
@@ -43,10 +63,10 @@ class UsuarioController extends Controller
             'contrasena' => [
                 'required',
                 'string',
-                'min:8',
                 'confirmed',
+                Password::defaults(),
             ],
-        ]);
+        ], $this->mensajesContrasena());
 
         DB::transaction(function () use ($datos) {
             $contrasenaCifrada = Hash::make($datos['contrasena']);
@@ -106,12 +126,12 @@ class UsuarioController extends Controller
         if ($request->filled('contrasena')) {
             $reglas['contrasena'] = [
                 'string',
-                'min:8',
                 'confirmed',
+                Password::defaults(),
             ];
         }
 
-        $datos = $request->validate($reglas);
+        $datos = $request->validate($reglas, $this->mensajesContrasena());
 
         $esMiCuenta = (int) $request->user()->usuario_idUsuario
             === (int) $usuario->idUsuario;
@@ -146,17 +166,23 @@ class UsuarioController extends Controller
 
             $cuenta = $usuario->cuentaAcceso;
 
-            if ($cuenta) {
-                $cambios = [
-                    'name' => $this->nombreCompleto($datos),
-                    'email' => $datos['correo'],
-                ];
+            $cambios = [
+                'name' => $this->nombreCompleto($datos),
+                'email' => $datos['correo'],
+            ];
 
+            if ($cuenta) {
                 if ($contrasenaCifrada !== null) {
                     $cambios['password'] = $contrasenaCifrada;
                 }
 
                 $cuenta->update($cambios);
+            } else {
+                // Si el usuario no tenía cuenta de acceso, se crea ahora
+                User::create($cambios + [
+                    'password' => $contrasenaCifrada ?? $usuario->contrasena,
+                    'usuario_idUsuario' => $usuario->idUsuario,
+                ]);
             }
         });
 
@@ -179,7 +205,7 @@ class UsuarioController extends Controller
             );
         }
 
-        //protege administrador 
+        // Protege al único administrador activo
         $esAdministrador = $usuario->rol?->nombre === 'Administrador';
 
         if (
@@ -234,6 +260,18 @@ class UsuarioController extends Controller
             'apellidoMaterno' => ['required', 'string', 'max:45'],
             'rol_idRol' => ['required', 'exists:roles,idRol'],
             'estado' => ['required', 'boolean'],
+        ];
+    }
+
+    private function mensajesContrasena(): array
+    {
+        return [
+            'contrasena.confirmed' => 'Las contraseñas no coinciden.',
+            'contrasena.min' => 'La contraseña debe tener al menos 10 caracteres.',
+            'contrasena.letters' => 'La contraseña debe incluir al menos una letra.',
+            'contrasena.mixed' => 'La contraseña debe incluir mayúsculas y minúsculas.',
+            'contrasena.numbers' => 'La contraseña debe incluir al menos un número.',
+            'contrasena.uncompromised' => 'Esa contraseña apareció en filtraciones de datos. Elige otra.',
         ];
     }
 

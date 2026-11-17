@@ -7,7 +7,6 @@ use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\BoletaTutorController;
 use App\Http\Controllers\CalificacionDocenteController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\EscuelaController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\PeriodoEscolarController;
 use App\Http\Controllers\ProfileController;
@@ -26,15 +25,15 @@ Route::middleware(['auth', 'activa'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Tutor
-    Route::prefix('tutor')->group(function () {
+    // Tutor (solo rol Tutor)
+    Route::prefix('tutor')->middleware('rol:Tutor')->group(function () {
         Route::get('solicitudes', [SolicitudTutorController::class, 'index'])->name('tutor.solicitudes.index');
         Route::post('solicitudes', [SolicitudTutorController::class, 'store'])->name('tutor.solicitudes.store');
         Route::get('hijos/{alumno}/boleta', [BoletaTutorController::class, 'show'])->name('tutor.boleta.show');
     });
 
-    // Docente
-    Route::prefix('docente')->group(function () {
+    // Docente (solo rol Docente)
+    Route::prefix('docente')->middleware('rol:Docente')->group(function () {
         Route::controller(SolicitudDocenteController::class)->group(function () {
             Route::get('solicitudes', 'index')->name('docente.solicitudes.index');
             Route::post('solicitudes/{solicitud}/aprobar', 'aprobar')->name('docente.solicitudes.aprobar');
@@ -50,16 +49,6 @@ Route::middleware(['auth', 'activa'])->group(function () {
     // Mi cuenta
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
-
-    // Escuelas
-    Route::controller(EscuelaController::class)->group(function () {
-        Route::get('escuelas/create', 'create')->middleware('permiso:Escuelas,Registrar')->name('escuelas.create');
-        Route::post('escuelas', 'store')->middleware('permiso:Escuelas,Registrar')->name('escuelas.store');
-        Route::get('escuelas/{escuela}/edit', 'edit')->middleware('permiso:Escuelas,Editar')->name('escuelas.edit');
-        Route::match(['put', 'patch'], 'escuelas/{escuela}', 'update')->middleware('permiso:Escuelas,Editar')->name('escuelas.update');
-    });
-
-    Route::get('escuela', [EscuelaController::class, 'show'])->name('escuelas.show');
 
     // Roles (catálogo de solo consulta; los permisos se definen en RolPermisoSeeder)
     Route::get('roles', [RolController::class, 'index'])
@@ -132,15 +121,31 @@ Route::middleware(['auth', 'activa'])->group(function () {
         Route::delete('periodos-escolares/{periodoEscolar}', 'destroy')->middleware('permiso:Periodos escolares,Activar/Inactivar')->name('periodos-escolares.destroy');
     });
 
-    // Tutores y alumnos
+    // Tutores y alumnos: consulta, registro y edición.
     Route::controller(TutorAlumnoController::class)->group(function () {
-        Route::get('tutor-alumnos', 'index')->middleware('permiso:Tutores y alumnos,Consultar')->name('tutor-alumnos.index');
-        Route::get('tutor-alumnos/create', 'create')->middleware('permiso:Tutores y alumnos,Registrar')->name('tutor-alumnos.create');
-        Route::post('tutor-alumnos', 'store')->middleware('permiso:Tutores y alumnos,Registrar')->name('tutor-alumnos.store');
-        Route::get('tutor-alumnos/{id}', 'show')->middleware('permiso:Tutores y alumnos,Consultar')->name('tutor-alumnos.show');
-        Route::get('tutor-alumnos/{id}/edit', 'edit')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.edit');
-        Route::match(['put', 'patch'], 'tutor-alumnos/{id}', 'update')->middleware('permiso:Tutores y alumnos,Editar')->name('tutor-alumnos.update');
-        Route::delete('tutor-alumnos/{id}', 'destroy')->middleware('permiso:Tutores y alumnos,Activar/Inactivar')->name('tutor-alumnos.destroy');
+        Route::get('tutor-alumnos', 'index')
+            ->middleware('permiso:Tutores y alumnos,Consultar')
+            ->name('tutor-alumnos.index');
+
+        Route::get('tutor-alumnos/create', 'create')
+            ->middleware('permiso:Tutores y alumnos,Registrar')
+            ->name('tutor-alumnos.create');
+
+        Route::post('tutor-alumnos', 'store')
+            ->middleware('permiso:Tutores y alumnos,Registrar')
+            ->name('tutor-alumnos.store');
+
+        Route::get('tutor-alumnos/{id}', 'show')
+            ->middleware('permiso:Tutores y alumnos,Consultar')
+            ->name('tutor-alumnos.show');
+
+        Route::get('tutor-alumnos/{id}/edit', 'edit')
+            ->middleware('permiso:Tutores y alumnos,Editar')
+            ->name('tutor-alumnos.edit');
+
+        Route::match(['put', 'patch'], 'tutor-alumnos/{id}', 'update')
+            ->middleware('permiso:Tutores y alumnos,Editar')
+            ->name('tutor-alumnos.update');
     });
 
     // Asignación de materias a docentes

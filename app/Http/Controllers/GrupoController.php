@@ -10,15 +10,32 @@ use Illuminate\Validation\Rule;
 
 class GrupoController extends Controller
 {
-    public function index()
+        public function index(Request $request)
     {
         $grupos = Grupo::with(['maestro', 'escuela'])
+            // Búsqueda por nombre del maestro responsable
+            ->when($request->filled('buscar'), function ($q) use ($request) {
+                $texto = '%' . $request->buscar . '%';
+
+                $q->whereHas('maestro', fn ($m) => $m
+                    ->where('nombre', 'like', $texto)
+                    ->orWhere('apellidoPaterno', 'like', $texto)
+                    ->orWhere('apellidoMaterno', 'like', $texto));
+            })
+            // Filtros por grado, ciclo escolar y estado
+            ->when($request->filled('grado'), fn ($q) => $q->where('grado', $request->grado))
+            ->when($request->filled('ciclo'), fn ($q) => $q->where('cicloEsc', $request->ciclo))
+            ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->estado))
             ->orderBy('cicloEsc')
             ->orderBy('grado')
             ->orderBy('letraGrupo')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('grupos.index', compact('grupos'));
+        // Ciclos escolares existentes, para el filtro
+        $ciclos = Grupo::select('cicloEsc')->distinct()->orderBy('cicloEsc')->pluck('cicloEsc');
+
+        return view('grupos.index', compact('grupos', 'ciclos'));
     }
 
     public function create()

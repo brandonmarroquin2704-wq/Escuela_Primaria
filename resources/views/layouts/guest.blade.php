@@ -12,17 +12,17 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-stone-900 antialiased">
-        <div class="flex min-h-screen flex-col items-center justify-center bg-stone-100 px-4 py-8">
+    <body class="font-sans text-slate-800 antialiased">
+        <div class="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
             {{-- Nombre de la escuela --}}
             <a href="/" class="text-center">
-                <h1 class="text-3xl font-extrabold leading-tight text-stone-900">
+                <h1 class="text-3xl font-extrabold leading-tight text-blue-900">
                     Escuela Primaria<br>21 De Octubre
                 </h1>
             </a>
 
             {{-- Tarjeta con el formulario --}}
-            <div class="mt-6 w-full overflow-hidden bg-white px-6 py-6 shadow-md sm:max-w-md sm:rounded-lg">
+            <div class="mt-6 w-full overflow-hidden border border-blue-100 bg-white px-6 py-6 shadow-md shadow-blue-900/10 sm:max-w-md sm:rounded-lg">
                 {{ $slot }}
             </div>
 

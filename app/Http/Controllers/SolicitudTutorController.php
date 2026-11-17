@@ -16,15 +16,7 @@ class SolicitudTutorController extends Controller
 {
     private function tutor()
     {
-        $perfil = Auth::user()->usuario;
-
-        abort_unless(
-            $perfil && $perfil->rol?->nombre === 'Tutor',
-            403,
-            'Esta sección es solo para padres o tutores.'
-        );
-
-        return $perfil;
+        return Auth::user()->usuario;
     }
 
     public function index(Request $request): View
