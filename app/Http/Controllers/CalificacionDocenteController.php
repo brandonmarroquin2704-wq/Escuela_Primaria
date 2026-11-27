@@ -114,6 +114,13 @@ class CalificacionDocenteController extends Controller
 
         $cierre = $this->cierreDe($asignacion, $periodo, $alumnosGrupo);
 
+        // Periodo terminado y sin captura previa: no se abren calificaciones nuevas.
+        if (! $cierre && $periodo->fechaFin && $periodo->fechaFin->endOfDay()->isPast()) {
+            return back()->withErrors([
+                'calificaciones' => $periodo->nombre . ' terminó el ' . $periodo->fechaFin->format('d/m/Y') . '. Ya no se pueden capturar calificaciones nuevas.',
+            ]);
+        }
+
         if ($cierre && now()->greaterThanOrEqualTo($cierre)) {
             return back()->withErrors([
                 'calificaciones' => 'La captura de este trimestre cerró el ' . $cierre->format('d/m/Y H:i') . '.',

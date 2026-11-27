@@ -75,7 +75,7 @@
             <h3 class="text-lg font-bold text-slate-800 mb-4">Respondidas recientemente</h3>
 
             @forelse ($resueltas as $s)
-                <div class="flex items-center justify-between border-b border-slate-100 py-3">
+                <div class="flex flex-col gap-3 border-b border-slate-100 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-semibold text-slate-800">
                             {{ $s->alumno->nombre }} {{ $s->alumno->apellidoPaterno }}
@@ -86,10 +86,25 @@
                             @if ($s->observacionRespuesta) · {{ $s->observacionRespuesta }} @endif
                         </p>
                     </div>
-                    <span class="rounded-full px-3 py-1 text-sm font-bold
-                        {{ $s->estadoSolicitud === 'aprobada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                        {{ ucfirst($s->estadoSolicitud) }}
-                    </span>
+
+                    <div class="flex items-center gap-3">
+                        <span class="rounded-full px-3 py-1 text-sm font-bold
+                            {{ $s->estadoSolicitud === 'aprobada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ ucfirst($s->estadoSolicitud) }}
+                        </span>
+
+                        @if ($s->estadoSolicitud === 'rechazada')
+                            <form method="POST"
+                                  action="{{ route('docente.solicitudes.reabrir', $s->idSolicitudAccesoSalon) }}"
+                                  onsubmit="return confirm('¿Revisar de nuevo esta solicitud? Volverá a pendientes.')">
+                                @csrf
+                                <button type="submit"
+                                        class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                                    Revisar de nuevo
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
             @empty
                 <p class="text-slate-500">Aún no has respondido solicitudes.</p>

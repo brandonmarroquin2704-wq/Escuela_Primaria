@@ -15,11 +15,14 @@ class ForoDocenteController extends Controller
         return (int) $request->user()->usuario->idUsuario;
     }
 
+    // Solo asignaciones activas del docente, con grupo y materia también activos.
     private function asignaciones(Request $request)
     {
         return AsignacionDocenteAsignatura::with(['grupo', 'asignatura'])
             ->where('docente_idUsuario', $this->docenteId($request))
             ->where('estado', true)
+            ->whereHas('grupo', fn ($q) => $q->where('estado', true))
+            ->whereHas('asignatura', fn ($q) => $q->where('estado', true))
             ->get();
     }
 
@@ -28,9 +31,7 @@ class ForoDocenteController extends Controller
         return [
             'asignacion_id' => [
                 'required', 'integer',
-                Rule::exists('asignacion_docente_asignaturas', 'id')
-                    ->where('docente_idUsuario', $this->docenteId($request))
-                    ->where('estado', true),
+                Rule::in($this->asignaciones($request)->pluck('id')->all()),
             ],
             'tipo' => ['required', Rule::in(array_keys(Comunicado::TIPOS))],
             'titulo' => ['required', 'string', 'max:120'],
@@ -40,19 +41,21 @@ class ForoDocenteController extends Controller
     }
 
     private function mensajes(): array
-{
-    return [
-        'asignacion_id.required' => 'Selecciona un grupo y una materia.',
-        'asignacion_id.exists' => 'Selecciona un grupo y una materia válidos.',
-        'tipo.required' => 'Selecciona el tipo de comunicado.',
-        'titulo.required' => 'Ingresa un título.',
-        'titulo.max' => 'El título supera el límite permitido.',
-        'contenido.required' => 'Escribe el mensaje del comunicado.',
-        'contenido.max' => 'El mensaje supera el límite permitido.',
-        'fecha_entrega.required_if' => 'Indica la fecha de entrega de la tarea.',
-        'fecha_entrega.after_or_equal' => 'La fecha de entrega no puede ser anterior a hoy.',
-    ];
-}
+    {
+        return [
+            'asignacion_id.required' => 'Selecciona un grupo y una materia.',
+            'asignacion_id.integer' => 'Selecciona un grupo y una materia válidos.',
+            'asignacion_id.in' => 'Selecciona un grupo y una materia válidos.',
+            'tipo.required' => 'Selecciona el tipo de comunicado.',
+            'tipo.in' => 'Selecciona un tipo de comunicado válido.',
+            'titulo.required' => 'Ingresa un título.',
+            'titulo.max' => 'El título supera el límite permitido.',
+            'contenido.required' => 'Escribe el mensaje del comunicado.',
+            'contenido.max' => 'El mensaje supera el límite permitido.',
+            'fecha_entrega.required_if' => 'Indica la fecha de entrega de la tarea.',
+            'fecha_entrega.after_or_equal' => 'La fecha de entrega no puede ser anterior a hoy.',
+        ];
+    }
 
     public function index(Request $request)
     {
@@ -74,7 +77,7 @@ class ForoDocenteController extends Controller
 
     public function store(Request $request)
     {
-        $datos = $request->validate($this->reglas($request));
+        $datos = $request->validate($this->reglas($request), $this->mensajes());
 
         if ($datos['tipo'] !== 'tarea') {
             $datos['fecha_entrega'] = null;
@@ -101,7 +104,7 @@ class ForoDocenteController extends Controller
     {
         Gate::authorize('update', $comunicado);
 
-        $datos = $request->validate($this->reglas($request));
+        $datos = $request->validate($this->reglas($request), $this->mensajes());
 
         if ($datos['tipo'] !== 'tarea') {
             $datos['fecha_entrega'] = null;
