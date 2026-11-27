@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class SolicitudDocenteController extends Controller
@@ -17,6 +18,7 @@ class SolicitudDocenteController extends Controller
         return Auth::user()->usuario;
     }
 
+    // Solo solicitudes de alumnos de grupos donde este docente es el titular.
     private function deMiGrupo($docente)
     {
         return SolicitudAccesoSalon::query()
@@ -54,6 +56,13 @@ class SolicitudDocenteController extends Controller
 
             abort_unless($s->estadoSolicitud === 'pendiente', 409, 'Esta solicitud ya fue respondida.');
 
+            // Solo puede haber un responsable principal activo por alumno.
+            $hayResponsable = TutorAlumno::where('alumno_idAlumno', $s->alumno_idAlumno)
+                ->where('estado', true)
+                ->where('esResponsable', true)
+                ->where('usuario_idUsuario', '!=', $s->tutor_idUsuario)
+                ->exists();
+
             TutorAlumno::updateOrCreate(
                 [
                     'usuario_idUsuario' => $s->tutor_idUsuario,
@@ -61,7 +70,7 @@ class SolicitudDocenteController extends Controller
                 ],
                 [
                     'parentesco' => $s->parentesco,
-                    'esResponsable' => $s->esResponsable,
+                    'esResponsable' => $s->esResponsable && ! $hayResponsable,
                     'estado' => true,
                 ]
             );
@@ -72,6 +81,12 @@ class SolicitudDocenteController extends Controller
                 'fechaRespuesta' => now(),
             ]);
         });
+
+        Log::info('docente.solicitud_resuelta', [
+            'docente' => $docente->idUsuario,
+            'solicitud' => $solicitud,
+            'resultado' => 'aprobada',
+        ]);
 
         return back()->with('status', 'Solicitud aprobada. El tutor ya puede ver a su hijo(a).');
     }
@@ -99,6 +114,40 @@ class SolicitudDocenteController extends Controller
             ]);
         });
 
+        Log::info('docente.solicitud_resuelta', [
+            'docente' => $docente->idUsuario,
+            'solicitud' => $solicitud,
+            'resultado' => 'rechazada',
+        ]);
+
         return back()->with('status', 'Solicitud rechazada.');
+    }
+
+    // Devuelve una solicitud rechazada a "pendiente" para revisarla de nuevo.
+    public function reabrir(int $solicitud): RedirectResponse
+    {
+        $docente = $this->docente();
+
+        DB::transaction(function () use ($docente, $solicitud) {
+            $s = $this->deMiGrupo($docente)
+                ->lockForUpdate()
+                ->findOrFail($solicitud);
+
+            abort_unless($s->estadoSolicitud === 'rechazada', 409, 'Solo se pueden revisar de nuevo las solicitudes rechazadas.');
+
+            $s->update([
+                'estadoSolicitud' => 'pendiente',
+                'docente_validador_idUsuario' => null,
+                'fechaRespuesta' => null,
+                'observacionRespuesta' => null,
+            ]);
+        });
+
+        Log::info('docente.solicitud_reabierta', [
+            'docente' => $docente->idUsuario,
+            'solicitud' => $solicitud,
+        ]);
+
+        return back()->with('status', 'Solicitud reabierta. Aparece de nuevo en pendientes.');
     }
 }

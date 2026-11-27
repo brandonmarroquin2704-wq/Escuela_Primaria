@@ -9,6 +9,8 @@
     $aprobadas = $solicitudes->where('estadoSolicitud', 'aprobada')->count();
     $rechazadas = $solicitudes->where('estadoSolicitud', 'rechazada')->count();
 
+    $maxIntentos = \App\Models\SolicitudAccesoSalon::MAX_INTENTOS;
+
     // Apariencia de cada estado: siempre con texto, nunca solo color
     $estados = [
         'pendiente' => [
@@ -27,7 +29,7 @@
             'texto' => 'Rechazada',
             'clase' => 'bg-red-100 text-red-800 ring-red-200',
             'punto' => 'bg-red-600',
-            'ayuda' => 'Tu solicitud fue rechazada. Consulta con la escuela para conocer más detalles.',
+            'ayuda' => 'Tu solicitud fue rechazada. Puedes volver a enviarla o consultar con la escuela para conocer más detalles.',
         ],
     ];
     $estadoPorDefecto = [
@@ -125,8 +127,8 @@
                                 :disabled="grupo === '' || cargando"
                                 class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-6 font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
                             >
-                                <span x-show="!cargando">Ver alumnos</span>
-                                <span x-show="cargando" x-cloak>Buscando…</span>
+                                <span x-show="!cargando">Ver Alumnos</span>
+                                <span x-show="cargando" x-cloak>Cargando…</span>
                                 <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                     <path fill-rule="evenodd" d="M10.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L13.6 11H4a1 1 0 1 1 0-2h9.6l-3.3-3.3a1 1 0 0 1 0-1.4z" clip-rule="evenodd" />
                                 </svg>
@@ -139,99 +141,113 @@
                     @endunless
                 </section>
 
-                {{-- Paso 2 y 3: alumno y datos --}}
+                {{-- Paso 2: buscar por nombre completo --}}
                 @if ($grupoSel)
-                    <section aria-labelledby="titulo-alumno" class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8">
-                        <h2 id="titulo-alumno" class="text-xl font-bold text-slate-900">
-                            2. Elige a tu hijo(a) en {{ $grupoSel->grado }}° {{ $grupoSel->letraGrupo }}
+                    <section aria-labelledby="titulo-busqueda" class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8">
+                        <h2 id="titulo-busqueda" class="text-xl font-bold text-slate-900">
+                            2. Busca a tu hijo(a) en {{ $grupoSel->grado }}° {{ $grupoSel->letraGrupo }}
                         </h2>
 
-                        @if ($alumnos->isEmpty())
-                            <p class="mt-4 rounded-lg bg-slate-50 px-4 py-3 text-slate-700">
-                                No hay alumnos disponibles en este grupo. Si no ves a tu hijo(a),
-                                pide a su docente que lo registre en el grupo.
-                            </p>
-                        @else
-                            <form method="POST" action="{{ route('tutor.solicitudes.store') }}" class="mt-4 space-y-6">
-                                @csrf
+                        <form
+                            method="GET"
+                            action="{{ route('tutor.solicitudes.index') }}"
+                            class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end"
+                            x-data="{ cargando: false }"
+                            @submit="cargando = true"
+                        >
+                            <input type="hidden" name="grupo" value="{{ $grupoSel->idGrupo }}">
 
-                                <fieldset>
-                                    <legend class="sr-only">Alumnos disponibles</legend>
-                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        @foreach ($alumnos as $a)
-                                            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 transition hover:bg-blue-50 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-600 motion-reduce:transition-none">
-                                                <input
-                                                    type="radio"
-                                                    name="alumno_idAlumno"
-                                                    value="{{ $a->idAlumno }}"
-                                                    class="text-blue-700 focus:ring-blue-600"
-                                                    @checked(old('alumno_idAlumno') == $a->idAlumno)
-                                                    required
-                                                >
-                                                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800" aria-hidden="true">
-                                                    {{ mb_strtoupper(mb_substr($a->nombre, 0, 1) . mb_substr($a->apellidoPaterno, 0, 1)) }}
-                                                </span>
-                                                <span class="font-semibold text-slate-900">
-                                                    {{ $a->nombre }}
-                                                    {{ mb_substr($a->apellidoPaterno, 0, 1) }}.
-                                                    @if ($a->apellidoMaterno)
-                                                        {{ mb_substr($a->apellidoMaterno, 0, 1) }}.
-                                                    @endif
-                                                </span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                    <x-input-error :messages="$errors->get('alumno_idAlumno')" class="mt-2" />
-                                </fieldset>
-
-                                <div>
-                                    <h2 class="text-xl font-bold text-slate-900">3. Confirma tus datos</h2>
-                                    <p class="mt-1 text-sm text-slate-600">Esto nos ayuda a comprobar que eres su familiar.</p>
-                                </div>
-
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <label for="fNac" class="mb-1 block text-sm font-semibold text-slate-800">Fecha de nacimiento de tu hijo(a)</label>
-                                        <input
-                                            id="fNac"
-                                            name="fNac"
-                                            type="date"
-                                            value="{{ old('fNac') }}"
-                                            required
-                                            class="h-12 w-full rounded-lg border-slate-300 text-slate-900 focus:border-blue-600 focus:ring-blue-600"
-                                        >
-                                        <x-input-error :messages="$errors->get('fNac')" class="mt-2" />
-                                    </div>
-
-                                    <div>
-                                        <label for="parentesco" class="mb-1 block text-sm font-semibold text-slate-800">Tu parentesco</label>
-                                        <select
-                                            id="parentesco"
-                                            name="parentesco"
-                                            required
-                                            class="h-12 w-full rounded-lg border-slate-300 text-slate-900 focus:border-blue-600 focus:ring-blue-600"
-                                        >
-                                            @foreach (['Padre', 'Madre', 'Tutor legal', 'Abuelo(a)', 'Otro'] as $p)
-                                                <option value="{{ $p }}" @selected(old('parentesco') === $p)>{{ $p }}</option>
-                                            @endforeach
-                                        </select>
-                                        <x-input-error :messages="$errors->get('parentesco')" class="mt-2" />
-                                    </div>
-                                </div>
-
-                                <label class="flex items-center gap-2 text-sm text-slate-800">
-                                    <input type="checkbox" name="esResponsable" value="1" class="rounded border-slate-300 text-blue-700 focus:ring-blue-600" @checked(old('esResponsable'))>
-                                    Soy el responsable principal del alumno
-                                </label>
-
-                                <button
-                                    type="submit"
-                                    class="inline-flex h-12 w-full items-center justify-center rounded-lg bg-blue-700 px-6 font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto motion-reduce:transition-none"
+                            <div class="flex-1">
+                                <label for="nombre" class="mb-1 block text-sm font-semibold text-slate-800">Nombre completo de tu hijo(a)</label>
+                                <input
+                                    id="nombre"
+                                    name="nombre"
+                                    type="text"
+                                    maxlength="120"
+                                    required
+                                    autocomplete="off"
+                                    value="{{ $nombreBuscado ?? old('nombre') }}"
+                                    placeholder="Nombre, apellido paterno y apellido materno"
+                                    class="h-12 w-full rounded-lg border-slate-300 text-base text-slate-900 focus:border-blue-600 focus:ring-blue-600"
                                 >
-                                    Enviar solicitud al docente
-                                </button>
-                            </form>
+                                <p class="mt-1 text-sm text-slate-600">Escribe nombre y apellidos completos. No importa si usas mayúsculas o minúsculas.</p>
+                                <x-input-error :messages="$errors->get('nombre')" class="mt-2" />
+                            </div>
+
+                            <button
+                                type="submit"
+                                :disabled="cargando"
+                                class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-6 font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                            >
+                                <span x-show="!cargando">Buscar</span>
+                                <span x-show="cargando" x-cloak>Buscando…</span>
+                            </button>
+                        </form>
+
+                        @if ($aviso)
+                            <p role="alert" class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800">{{ $aviso }}</p>
                         @endif
+                    </section>
+                @endif
+
+                {{-- Paso 3: confirmar y enviar solicitud --}}
+                @if ($alumno)
+                    <section aria-labelledby="titulo-confirmar" class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8">
+                        <h2 id="titulo-confirmar" class="text-xl font-bold text-slate-900">3. Confirma tus datos</h2>
+
+                        <div class="mt-4 flex items-center gap-3 rounded-xl border border-blue-600 bg-blue-50 px-4 py-3">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800" aria-hidden="true">
+                                {{ mb_strtoupper(mb_substr($alumno->nombre, 0, 1) . mb_substr($alumno->apellidoPaterno, 0, 1)) }}
+                            </span>
+                            <div>
+                                <p class="font-bold text-slate-900">{{ trim($alumno->nombre . ' ' . $alumno->apellidoPaterno . ' ' . $alumno->apellidoMaterno) }}</p>
+                                <p class="text-sm text-slate-600">Grupo {{ $grupoSel->grado }}° {{ $grupoSel->letraGrupo }}</p>
+                            </div>
+                        </div>
+
+                        <p class="mt-4 text-sm text-slate-600">Indica tu parentesco para que el docente pueda revisar tu solicitud.</p>
+
+                        <form
+                            method="POST"
+                            action="{{ route('tutor.solicitudes.store') }}"
+                            class="mt-4 space-y-6"
+                            x-data="{ enviando: false }"
+                            @submit="if (enviando) { $event.preventDefault(); return; } enviando = true"
+                        >
+                            @csrf
+                            <input type="hidden" name="grupo" value="{{ $grupoSel->idGrupo }}">
+                            <input type="hidden" name="nombre" value="{{ $nombreBuscado }}">
+                            <input type="hidden" name="alumno_idAlumno" value="{{ $alumno->idAlumno }}">
+                            <x-input-error :messages="$errors->get('alumno_idAlumno')" class="mt-2" />
+
+                            <div class="sm:max-w-xs">
+                                <label for="parentesco" class="mb-1 block text-sm font-semibold text-slate-800">Tu parentesco</label>
+                                <select
+                                    id="parentesco"
+                                    name="parentesco"
+                                    required
+                                    class="h-12 w-full rounded-lg border-slate-300 text-slate-900 focus:border-blue-600 focus:ring-blue-600"
+                                >
+                                    @foreach (['Padre', 'Madre', 'Tutor legal', 'Abuelo(a)', 'Otro'] as $p)
+                                        <option value="{{ $p }}" @selected(old('parentesco') === $p)>{{ $p }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('parentesco')" class="mt-2" />
+                            </div>
+
+                            <label class="flex items-center gap-2 text-sm text-slate-800">
+                                <input type="checkbox" name="esResponsable" value="1" class="rounded border-slate-300 text-blue-700 focus:ring-blue-600" @checked(old('esResponsable'))>
+                                Soy el responsable principal del alumno
+                            </label>
+
+                            <button
+                                type="submit"
+                                :disabled="enviando"
+                                class="inline-flex h-12 w-full items-center justify-center rounded-lg bg-blue-700 px-6 font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto motion-reduce:transition-none"
+                            >
+                                Enviar solicitud al docente
+                            </button>
+                        </form>
                     </section>
                 @endif
 
@@ -248,10 +264,10 @@
                         @forelse ($solicitudes as $s)
                             @php
                                 $est = $estados[$s->estadoSolicitud] ?? $estadoPorDefecto;
-                                $alumno = $s->alumno;
-                                $g = $alumno?->grupo;
-                                $nombreAlumno = $alumno ? trim($alumno->nombre . ' ' . $alumno->apellidoPaterno) : 'Alumno no disponible';
-                                $inicialesAlumno = $alumno ? mb_strtoupper(mb_substr($alumno->nombre, 0, 1) . mb_substr($alumno->apellidoPaterno, 0, 1)) : '—';
+                                $alumnoSol = $s->alumno;
+                                $g = $alumnoSol?->grupo;
+                                $nombreAlumno = $alumnoSol ? trim($alumnoSol->nombre . ' ' . $alumnoSol->apellidoPaterno) : 'Alumno no disponible';
+                                $inicialesAlumno = $alumnoSol ? mb_strtoupper(mb_substr($alumnoSol->nombre, 0, 1) . mb_substr($alumnoSol->apellidoPaterno, 0, 1)) : '—';
                             @endphp
 
                             <article class="rounded-xl border border-slate-200 p-4 transition hover:shadow-md motion-reduce:transition-none">
@@ -297,6 +313,35 @@
                                         <span class="mt-1 block"><span class="font-semibold">Comentario del docente:</span> {{ $s->observacionRespuesta }}</span>
                                     @endif
                                 </p>
+
+                                {{-- Reenvío de solicitudes rechazadas --}}
+                                @if ($s->estadoSolicitud === 'rechazada')
+                                    @if ($s->intentos < $maxIntentos)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('tutor.solicitudes.reenviar', $s->idSolicitudAccesoSalon) }}"
+                                            class="mt-3"
+                                            x-data="{ enviando: false }"
+                                            @submit="if (enviando) { $event.preventDefault(); return; } enviando = true"
+                                        >
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                :disabled="enviando"
+                                                class="inline-flex h-11 items-center justify-center rounded-lg border border-blue-700 px-4 font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                                            >
+                                                Volver a enviar solicitud
+                                            </button>
+                                            <p class="mt-1 text-xs text-slate-600">
+                                                Intento {{ $s->intentos }} de {{ $maxIntentos }}.
+                                            </p>
+                                        </form>
+                                    @else
+                                        <p class="mt-3 text-sm font-semibold text-slate-700">
+                                            Alcanzaste el máximo de intentos para este alumno. Acude a la escuela para resolverlo.
+                                        </p>
+                                    @endif
+                                @endif
                             </article>
                         @empty
                             <p class="rounded-lg bg-slate-50 px-4 py-6 text-center text-slate-700">No tienes solicitudes recientes.</p>
@@ -351,8 +396,8 @@
                 <section class="rounded-2xl border border-blue-100 bg-blue-50 p-6">
                     <h2 class="text-base font-bold text-blue-950">¿Necesitas ayuda?</h2>
                     <p class="mt-2 text-sm text-blue-950">
-                        Si no encuentras a tu hijo(a), verifica el grupo seleccionado. Cuando envíes la solicitud,
-                        el docente del grupo la revisará.
+                        Si no encuentras a tu hijo(a), verifica el grupo seleccionado y escribe su nombre completo,
+                        con todos sus apellidos. Cuando envíes la solicitud, el docente del grupo la revisará.
                     </p>
                 </section>
             </aside>

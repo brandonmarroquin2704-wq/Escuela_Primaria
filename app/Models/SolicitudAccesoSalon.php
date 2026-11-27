@@ -9,6 +9,9 @@ class SolicitudAccesoSalon extends Model
 {
     use HasFactory;
 
+    // Máximo de veces que un tutor puede enviar la solicitud para un mismo alumno.
+    public const MAX_INTENTOS = 3;
+
     protected $table = 'solicitudes_acceso_salon';
 
     protected $primaryKey = 'idSolicitudAccesoSalon';
@@ -20,6 +23,7 @@ class SolicitudAccesoSalon extends Model
         'parentesco',
         'esResponsable',
         'estadoSolicitud',
+        'intentos',
         'fechaSolicitud',
         'fechaRespuesta',
         'observacionRespuesta',
@@ -31,6 +35,7 @@ class SolicitudAccesoSalon extends Model
         return [
             'esResponsable' => 'boolean',
             'estado' => 'boolean',
+            'intentos' => 'integer',
             'fechaSolicitud' => 'datetime',
             'fechaRespuesta' => 'datetime',
         ];
